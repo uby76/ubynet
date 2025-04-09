@@ -65,7 +65,7 @@ merge_mass_intensity <- function(dir_path, output_mass_intensity, output_mass_el
 #'
 #' @return NULL (files are saved to disk).
 #' @export
-merge_molform_intensity <- function(dir_path, output_molform_intensity, output_molform_elements, output_filtered_molform, output_filtered_samples_dir) {
+merge_molform_intensity <- function(dir_path, output_molform_intensity, output_molform_elements, output_filtered_samples_dir) {
   library(dplyr)
   library(readr)
   library(tidyr)
@@ -109,11 +109,6 @@ merge_molform_intensity <- function(dir_path, output_molform_intensity, output_m
       df_elements <- df %>% select(MolForm, all_of(element_cols))
       molform_elements_list[[file_name]] <- df_elements
     }
-  }
-  
-  if (length(filtered_data_list) > 0) {
-    filtered_data <- bind_rows(filtered_data_list) %>% distinct(MolForm, .keep_all = TRUE)
-    write_csv(filtered_data, output_filtered_molform)
   }
 
   if (length(molform_intensity_list) > 0) {
