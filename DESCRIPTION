@@ -1,0 +1,15 @@
+Package: ubynet
+Type: Package
+Title: Analysis of Molecular Data
+Version: 0.1.0
+Author: Jianwei <jianwei363@gmail.com>
+Maintainer: Jianwei <jianwei363@gmail.com>
+Description: Functions for analyzing molecular data, including reaction matching(wx:uby076).
+Depends:
+    R (>= 3.5.0)
+Imports:
+    data.table, dplyr
+License: What license it uses
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.3.2
