@@ -1,7 +1,7 @@
-#' Classify MolForm into photoproduct, photoresistant, and disappearance
+#' Classify MolForm into product, resistant, and disappearance
 #'
 #' This function takes two CSV files or data frames representing "before" and "after" datasets,
-#' then classifies MolForm into "photoproduct", "photoresistant", or "disappearance".
+#' then classifies MolForm into "product", "resistant", or "disappearance".
 #'
 #' @param before Data frame or path to CSV file containing the "before" dataset.
 #' @param after Data frame or path to CSV file containing the "after" dataset.
@@ -43,13 +43,13 @@ classify_MolForm <- function(before, after, output_file = NULL) {
   classified_data <- full_join(before_formulas, after_formulas, by = "MolForm") %>%
     mutate(
       status = case_when(
-        !is.na(in_before) & is.na(in_after)  ~ "photoproduct",
-        is.na(in_before) & !is.na(in_after)  ~ "photoresistant",
+        !is.na(in_before) & is.na(in_after)  ~ "product",
+        is.na(in_before) & !is.na(in_after)  ~ "resistant",
         !is.na(in_before) & !is.na(in_after) ~ "disappearance"
       ),
       value = case_when(
-        status == "photoproduct"   ~ 1,
-        status == "photoresistant" ~ 0,
+        status == "product"   ~ 1,
+        status == "resistant" ~ 0,
         status == "disappearance"  ~ 2,
         TRUE ~ NA_real_
       )
@@ -65,10 +65,10 @@ classify_MolForm <- function(before, after, output_file = NULL) {
   return(classified_data)
 }
 
-#' Classify Mass into photoproduct, photoresistant, and photoresistant
+#' Classify Mass into product, resistant, and resistant
 #'
 #' This function takes two CSV files or data frames representing "before" and "after" datasets,
-#' then classifies Mass into "photoproduct", "photoresistant", or "photoresistant".
+#' then classifies Mass into "product", "resistant", or "resistant".
 #'
 #' @param before Data frame or path to CSV file containing the "before" dataset.
 #' @param after Data frame or path to CSV file containing the "after" dataset.
@@ -110,13 +110,13 @@ classify_Mass <- function(before, after, output_file = NULL) {
   classified_data <- full_join(before_masses, after_masses, by = "Mass") %>%
     mutate(
       status = case_when(
-        !is.na(in_before) & is.na(in_after)  ~ "photoproduct",
-        is.na(in_before) & !is.na(in_after)  ~ "photoresistant",
+        !is.na(in_before) & is.na(in_after)  ~ "product",
+        is.na(in_before) & !is.na(in_after)  ~ "resistant",
         !is.na(in_before) & !is.na(in_after) ~ "disappearance"
       ),
       value = case_when(
-        status == "photoproduct"   ~ 1,
-        status == "photoresistant" ~ 0,
+        status == "product"   ~ 1,
+        status == "resistant" ~ 0,
         status == "disappearance"  ~ 2,
         TRUE ~ NA_real_
       )
