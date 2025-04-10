@@ -43,14 +43,14 @@ classify_MolForm <- function(before, after, output_file = NULL) {
   classified_data <- full_join(before_formulas, after_formulas, by = "MolForm") %>%
     mutate(
       status = case_when(
-        !is.na(in_before) & is.na(in_after)  ~ "product",
-        is.na(in_before) & !is.na(in_after)  ~ "resistant",
-        !is.na(in_before) & !is.na(in_after) ~ "disappearance"
+        !is.na(in_before) & is.na(in_after)  ~ "disappearance",# Only in before: resistant
+        is.na(in_before) & !is.na(in_after)  ~ "product",
+        !is.na(in_before) & !is.na(in_after) ~ "resistant"
       ),
       value = case_when(
-        status == "product"   ~ 1,
-        status == "resistant" ~ 0,
-        status == "disappearance"  ~ 2,
+        status == "disappearance"   ~ 0,
+        status == "product" ~ 2,
+        status == "resistant"  ~ 1,
         TRUE ~ NA_real_
       )
     ) %>%
@@ -110,14 +110,14 @@ classify_Mass <- function(before, after, output_file = NULL) {
   classified_data <- full_join(before_masses, after_masses, by = "Mass") %>%
     mutate(
       status = case_when(
-        !is.na(in_before) & is.na(in_after)  ~ "product",
-        is.na(in_before) & !is.na(in_after)  ~ "resistant",
-        !is.na(in_before) & !is.na(in_after) ~ "disappearance"
+        !is.na(in_before) & is.na(in_after)  ~ "disappearance",
+        is.na(in_before) & !is.na(in_after)  ~ "product",
+        !is.na(in_before) & !is.na(in_after) ~ "resistant"
       ),
       value = case_when(
-        status == "product"   ~ 1,
-        status == "resistant" ~ 0,
-        status == "disappearance"  ~ 2,
+        status == "disappearance"   ~ 0,
+        status == "product" ~ 2,
+        status == "resistant"  ~ 1,
         TRUE ~ NA_real_
       )
     ) %>%
