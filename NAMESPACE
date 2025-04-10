@@ -3,3 +3,5 @@
 export(match_reactions_by_intensity)
 export(merge_mass_intensity)
 export(merge_molform_intensity)
+export(classify_MolForm)
+export(classify_Mass)
