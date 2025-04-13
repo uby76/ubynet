@@ -131,4 +131,101 @@ classify_Mass <- function(before, after, output_file = NULL) {
 
   return(classified_data)
 }
+
+
+#' Classify MolForm into precursors, products, and resistants
+#'
+#' This function classifies MolForm based on intensity changes between "before" and "after" samples.
+#'
+#' @param before Data frame or path to CSV file containing the "before" dataset.
+#' @param after Data frame or path to CSV file containing the "after" dataset.
+#' @param output_file Path to save the classified results (default: NULL, no file saved).
+#'
+#' @return A data frame with MolForm classification.
+#' @export
+classify_MolForm_intensity <- function(before, after, output_file = NULL) {
+  library(dplyr)
+
+  if (is.character(before)) before <- read.csv(before)
+  if (is.character(after)) after <- read.csv(after)
+
+  if (!all(c("MolForm", "intensity") %in% colnames(before)) || 
+      !all(c("MolForm", "intensity") %in% colnames(after))) {
+    stop("Error: The input data must contain 'MolForm' and 'intensity' columns.")
+  }
+
+  merged_data <- full_join(
+    before %>% select(MolForm, intensity) %>% rename(intensity_before = intensity),
+    after %>% select(MolForm, intensity) %>% rename(intensity_after = intensity),
+    by = "MolForm"
+  ) %>% 
+    mutate(
+      intensity_before = replace_na(intensity_before, 0),
+      intensity_after = replace_na(intensity_after, 0),
+      fc = ifelse(intensity_before > 0, intensity_after / intensity_before, NA),
+      status = case_when(
+        is.na(fc) ~ "product",  # If fc is NA (intensity_before = 0), classify as product
+        !is.na(fc) & fc < 0.5 ~ "precursor",
+        !is.na(fc) & fc > 2.0 ~ "product",
+        !is.na(fc) & fc >= 0.5 & fc <= 2.0 ~ "resistant",
+        TRUE ~ NA_character_
+      )
+    ) %>% 
+    select(MolForm, intensity_before, intensity_after, fc, status)
+
+  if (!is.null(output_file)) {
+    write.csv(merged_data, output_file, row.names = FALSE)
+    message("Classification completed. Results saved to: ", output_file)
+  }
+
+  return(merged_data)
+}
+
+#' Classify Mass into precursors, products, and resistants
+#'
+#' This function classifies Mass based on intensity changes between "before" and "after" samples.
+#'
+#' @param before Data frame or path to CSV file containing the "before" dataset.
+#' @param after Data frame or path to CSV file containing the "after" dataset.
+#' @param output_file Path to save the classified results (default: NULL, no file saved).
+#'
+#' @return A data frame with Mass classification.
+#' @export
+classify_Mass_intensity <- function(before, after, output_file = NULL) {
+  library(dplyr)
+
+  if (is.character(before)) before <- read.csv(before)
+  if (is.character(after)) after <- read.csv(after)
+
+  if (!all(c("Mass", "intensity") %in% colnames(before)) || 
+      !all(c("Mass", "intensity") %in% colnames(after))) {
+    stop("Error: The input data must contain 'Mass' and 'intensity' columns.")
+  }
+
+  merged_data <- full_join(
+    before %>% select(Mass, intensity) %>% rename(intensity_before = intensity),
+    after %>% select(Mass, intensity) %>% rename(intensity_after = intensity),
+    by = "Mass"
+  ) %>% 
+    mutate(
+      intensity_before = replace_na(intensity_before, 0),
+      intensity_after = replace_na(intensity_after, 0),
+      fc = ifelse(intensity_before > 0, intensity_after / intensity_before, NA),
+      status = case_when(
+        is.na(fc) ~ "product",  # If fc is NA (intensity_before = 0), classify as product
+        !is.na(fc) & fc < 0.5 ~ "precursor",
+        !is.na(fc) & fc > 2.0 ~ "product",
+        !is.na(fc) & fc >= 0.5 & fc <= 2.0 ~ "resistant",
+        TRUE ~ NA_character_
+      )
+    ) %>% 
+    select(Mass, intensity_before, intensity_after, fc, status)
+
+  if (!is.null(output_file)) {
+    write.csv(merged_data, output_file, row.names = FALSE)
+    message("Classification completed. Results saved to: ", output_file)
+  }
+
+  return(merged_data)
+}
     
