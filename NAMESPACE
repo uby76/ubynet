@@ -11,7 +11,3 @@ export(compare_molforms)
 export(compare_mass)
 export(compare_multiple_datasets)
 
-importFrom(utils, read.csv)
-importFrom(utils, write.csv)
-importFrom(stats, setNames)
-importFrom(utils, basename)
