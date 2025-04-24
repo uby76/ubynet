@@ -33,6 +33,7 @@ merge_mass_intensity <- function(dir_path, output_mass_intensity, output_mass_el
     library(dplyr)
     library(readr)
     library(tidyr)
+    library(ftmsRanalysis)
     
     file_list <- list.files(dir_path, pattern = "\\.csv$", full.names = TRUE)
     if (length(file_list) == 0) stop("No CSV files found in the directory.")
@@ -196,6 +197,7 @@ merge_molform_intensity <- function(dir_path, output_molform_intensity, output_m
     library(dplyr)
     library(readr)
     library(tidyr)
+    library(ftmsRanalysis)
     
     file_list <- list.files(dir_path, pattern = "\\.csv$", full.names = TRUE)
     if (length(file_list) == 0) stop("No CSV files found in the directory.")
