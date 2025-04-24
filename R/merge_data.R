@@ -9,26 +9,26 @@
 #' @export
 merge_mass_intensity <- function(dir_path, output_mass_intensity, output_mass_elements, output_meta_file = NULL) {
     install_dependencies <- function() {
-        # 安装 devtools
+        # Install devtools
         if (!requireNamespace("devtools", quietly = TRUE)) {
             install.packages("devtools")
         }
-
-        # 安装必需包
+        
+        # Install required packages
         required_packages <- c("readr", "dplyr", "tools", "ftmsRanalysis", "tidyr")
         for (pkg in required_packages) {
             if (!requireNamespace(pkg, quietly = TRUE)) {
                 install.packages(pkg)
             }
         }
-
-        # 安装特定版本的 ftmsRanalysis
+        
+        # Install specific version of ftmsRanalysis
         if (!"ftmsRanalysis" %in% installed.packages()[, "Package"]) {
             devtools::install_github("EMSL-Computing/ftmsRanalysis@1.0.0")
         }
     }
-
-    # 调用自动依赖安装
+    
+    # Call dependency installation function
     install_dependencies()
     library(dplyr)
     library(readr)
@@ -66,18 +66,6 @@ merge_mass_intensity <- function(dir_path, output_mass_intensity, output_mass_el
         }
     }
     
-    # Generate metadata file automatically from sample names
-    emeta <- data.frame(
-        SampleID = sample_names,
-        FileName = paste0(sample_names, ".csv"),
-        SampleType = "Sample"  # Default sample type
-    )
-    
-    # Save metadata file if path is provided
-    if (!is.null(output_meta_file)) {
-        write_csv(emeta, output_meta_file)
-    }
-    
     if (length(mass_intensity_list) > 0) {
         merged_mass_intensity <- Reduce(function(x, y) full_join(x, y, by = "Mass"), mass_intensity_list) %>% 
             mutate(across(everything(), ~ replace_na(.x, 0))) %>%
@@ -101,45 +89,44 @@ merge_mass_intensity <- function(dir_path, output_mass_intensity, output_mass_el
     data_fticrms <- read.csv(output_mass_intensity) # Intensity data for each sample
     e_fticrms <- read.csv(output_mass_elements)    # Information on Mass Spectrometry
     
-    # Build e_fticrmsdata data frame
-    columns_to_extract <- c("Mass", "NeutralMass", "Error", "C", "H", "O", "N", "C13", "S", "P", "Na")
-    e_fticrmsdata <- e_fticrms %>%
-        select(all_of(intersect(columns_to_extract, names(e_fticrms)))) %>%
-        bind_cols(
-            setNames(lapply(setdiff(columns_to_extract, names(e_fticrms)), function(col) {
-                rep(0, nrow(e_fticrms))  # The length is the number of rows and the value is 0
-            }), setdiff(columns_to_extract, names(e_fticrms)))
-        ) %>%
-        select(all_of(columns_to_extract))
+    # Critical fix: Extract actual sample IDs from the data frame columns
+    # Get all column names except "Mass" - these are the sample IDs
+    actual_sample_ids <- setdiff(colnames(data_fticrms), "Mass")
     
-    # Build e_fticrmsdata data frame with Mass included
-    # First check if Mass exists in e_fticrms
-    has_mass <- "Mass" %in% names(e_fticrms)
+    # Generate metadata dataframe with correct sample IDs
+    emeta <- data.frame(
+        SampleID = actual_sample_ids,
+        FileName = paste0(actual_sample_ids, ".csv"),
+        SampleType = "Sample"  # Default sample type
+    )
     
-    columns_to_extract <- c("NeutralMass", "Error", "C", "H", "O", "N", "C13", "S", "P", "Na")
-    
-    # Create base data frame with Mass from data_fticrms if needed
-    if(has_mass) {
-        e_fticrmsdata <- e_fticrms %>%
-            select(Mass, all_of(intersect(columns_to_extract, names(e_fticrms))))
-    } else {
-        # If Mass doesn't exist in e_fticrms, add it from data_fticrms
-        e_fticrmsdata <- data_fticrms %>%
-            select(Mass) %>%
-            left_join(
-                e_fticrms %>% select(all_of(intersect(columns_to_extract, names(e_fticrms)))),
-                by = character()  # Empty by means a cartesian join if needed
-            )
+    # Save metadata file if path is provided
+    if (!is.null(output_meta_file)) {
+        write_csv(emeta, output_meta_file)
     }
     
-    # Add any missing required columns with zeros
-    for(col in setdiff(columns_to_extract, names(e_fticrmsdata))) {
+    # Build e_fticrmsdata data frame
+    columns_to_extract <- c("Mass", "NeutralMass", "Error", "C", "H", "O", "N", "C13", "S", "P", "Na")
+    
+    # Create base data frame with Mass from e_fticrms
+    e_fticrmsdata <- e_fticrms %>% select(Mass)
+    
+    # Add existing columns from e_fticrms
+    existing_columns <- intersect(columns_to_extract[-1], names(e_fticrms))
+    if (length(existing_columns) > 0) {
+        e_fticrmsdata <- e_fticrmsdata %>%
+            left_join(e_fticrms %>% select(Mass, all_of(existing_columns)), by = "Mass")
+    }
+    
+    # Add missing columns with zeros
+    missing_columns <- setdiff(columns_to_extract[-1], names(e_fticrmsdata))
+    for (col in missing_columns) {
         e_fticrmsdata[[col]] <- 0
     }
     
-    # Make sure Mass is the first column
+    # Ensure correct column order
     e_fticrmsdata <- e_fticrmsdata %>%
-        select(Mass, everything())
+        select(all_of(columns_to_extract[columns_to_extract %in% names(e_fticrmsdata)]))
     
     # Create peakData object
     peakObj <- as.peakData(
@@ -172,27 +159,27 @@ merge_mass_intensity <- function(dir_path, output_mass_intensity, output_mass_el
 #' @export
 merge_molform_intensity <- function(dir_path, output_molform_intensity, output_molform_elements, 
                                     output_filtered_samples_dir, output_meta_file = NULL) {
-        install_dependencies <- function() {
-        # 安装 devtools
+    install_dependencies <- function() {
+        # Install devtools
         if (!requireNamespace("devtools", quietly = TRUE)) {
             install.packages("devtools")
         }
-
-        # 安装必需包
+        
+        # Install required packages
         required_packages <- c("readr", "dplyr", "tools", "ftmsRanalysis", "tidyr")
         for (pkg in required_packages) {
             if (!requireNamespace(pkg, quietly = TRUE)) {
                 install.packages(pkg)
             }
         }
-
-        # 安装特定版本的 ftmsRanalysis
+        
+        # Install specific version of ftmsRanalysis
         if (!"ftmsRanalysis" %in% installed.packages()[, "Package"]) {
             devtools::install_github("EMSL-Computing/ftmsRanalysis@1.0.0")
         }
     }
-
-    # 调用自动依赖安装
+    
+    # Call dependency installation function
     install_dependencies()
     library(dplyr)
     library(readr)
@@ -223,6 +210,7 @@ merge_molform_intensity <- function(dir_path, output_molform_intensity, output_m
         # Add sample name to our list for metadata
         sample_names <- c(sample_names, file_name)
         
+        # Filter out duplicate MolForms, keeping the one with the lowest absolute Error
         if (any(duplicated(df$MolForm))) {
             df <- df %>%
                 group_by(MolForm) %>%
@@ -244,18 +232,6 @@ merge_molform_intensity <- function(dir_path, output_molform_intensity, output_m
             df_elements <- df %>% select(MolForm, all_of(element_cols))
             molform_elements_list[[file_name]] <- df_elements
         }
-    }
-    
-    # Generate metadata file automatically from sample names
-    emeta <- data.frame(
-        SampleID = sample_names,
-        FileName = paste0(sample_names, ".csv"),
-        SampleType = "Sample"  # Default sample type
-    )
-    
-    # Save metadata file if path is provided
-    if (!is.null(output_meta_file)) {
-        write_csv(emeta, output_meta_file)
     }
     
     if (length(molform_intensity_list) > 0) {
@@ -281,33 +257,42 @@ merge_molform_intensity <- function(dir_path, output_molform_intensity, output_m
     data_fticrms <- read.csv(output_molform_intensity) # Intensity data for each sample
     e_fticrms <- read.csv(output_molform_elements)    # Information on Mass Spectrometry
     
-    # Build e_fticrmsdata data frame
-    # Make sure to include MolForm in e_meta
-    # First check if MolForm exists in e_fticrms
-    has_molform <- "MolForm" %in% names(e_fticrms)
+    # Critical fix: Extract actual sample IDs from the data frame columns
+    # Get all column names except "MolForm" - these are the sample IDs
+    actual_sample_ids <- setdiff(colnames(data_fticrms), "MolForm")
     
-    columns_to_extract <- c("Mass", "NeutralMass", "Error", "C", "H", "O", "N", "C13", "S", "P", "Na")
+    # Generate metadata dataframe with correct sample IDs
+    emeta <- data.frame(
+        SampleID = actual_sample_ids,
+        FileName = paste0(actual_sample_ids, ".csv"),
+        SampleType = "Sample"  # Default sample type
+    )
     
-    # Create base data frame with MolForm from data_fticrms if needed
-    if(has_molform) {
-        e_fticrmsdata <- e_fticrms %>%
-            select(MolForm, all_of(intersect(columns_to_extract, names(e_fticrms))))
-    } else {
-        # If MolForm doesn't exist in e_fticrms, add it from data_fticrms
-        e_fticrmsdata <- data_fticrms %>%
-            select(MolForm) %>%
-            left_join(
-                e_fticrms %>% select(all_of(intersect(columns_to_extract, names(e_fticrms)))),
-                by = character()  # Empty by means a cartesian join if needed
-            )
+    # Save metadata file if path is provided
+    if (!is.null(output_meta_file)) {
+        write_csv(emeta, output_meta_file)
     }
     
-    # Add any missing required columns with zeros
-    for(col in setdiff(columns_to_extract, names(e_fticrmsdata))) {
+    # Build e_fticrmsdata data frame
+    columns_to_extract <- c("Mass", "NeutralMass", "Error", "C", "H", "O", "N", "C13", "S", "P", "Na")
+    
+    # Create base data frame with MolForm from e_fticrms
+    e_fticrmsdata <- e_fticrms %>% select(MolForm)
+    
+    # Add existing columns from e_fticrms
+    existing_columns <- intersect(columns_to_extract, names(e_fticrms))
+    if (length(existing_columns) > 0) {
+        e_fticrmsdata <- e_fticrmsdata %>%
+            left_join(e_fticrms %>% select(MolForm, all_of(existing_columns)), by = "MolForm")
+    }
+    
+    # Add missing columns with zeros
+    missing_columns <- setdiff(columns_to_extract, names(e_fticrmsdata))
+    for (col in missing_columns) {
         e_fticrmsdata[[col]] <- 0
     }
     
-    # Make sure MolForm is the first column
+    # Ensure MolForm is the first column
     e_fticrmsdata <- e_fticrmsdata %>%
         select(MolForm, everything())
     
@@ -329,4 +314,3 @@ merge_molform_intensity <- function(dir_path, output_molform_intensity, output_m
     
     return(peakObj)
 }
-
