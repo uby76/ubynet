@@ -8,6 +8,31 @@
 #' @return A peakData object with the merged data.
 #' @export
 merge_mass_intensity <- function(dir_path, output_mass_intensity, output_mass_elements, output_meta_file = NULL) {
+      install_dependencies <- function() {
+    # Install the devtools package
+    if (!requireNamespace("devtools", quietly = TRUE)) {
+      install.packages("devtools")
+    }
+    
+    # Install the necessary packages
+    required_packages <- c("readr", "dplyr", "tools", "ftmsRanalysis")
+    
+    for (pkg in required_packages) {
+      if (!requireNamespace(pkg, quietly = TRUE)) {
+        install.packages(pkg)
+      }
+    }
+    
+    # Installing a specific version of the ftmsRanalysis package
+    if (!requireNamespace("ftmsRanalysis", quietly = TRUE)) {
+      devtools::install_github("EMSL-Computing/ftmsRanalysis@1.0.0")
+    }
+    
+  }
+  
+  # Installation of dependency packages
+  install_dependencies()
+
     library(dplyr)
     library(readr)
     library(tidyr)
