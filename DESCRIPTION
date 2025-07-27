@@ -1,15 +1,27 @@
 Package: ubynet
 Type: Package
 Title: Analysis of Molecular Data
-Version: 0.1.3
+Version: 0.1.5
 Author: Jianwei <jianwei363@gmail.com>
 Maintainer: Jianwei <jianwei363@gmail.com>
-Description: Functions for analyzing molecular data, including reaction matching(wx:uby076).
+Description: Functions for analyzing molecular data, including reaction matching, 
+    molecular transformation network construction based on paired mass differences (PMD),
+    and biochemical transformation detection (wx:uby076).
 Depends:
     R (>= 3.5.0)
 Imports:
-    data.table, dplyr, utils
+    data.table, 
+    dplyr, 
+    utils,
+    readr,
+    igraph,
+    tools,
+    picante
+Suggests:
+    progress,
+    testthat
 License: What license it uses
 Encoding: UTF-8
 LazyData: true
+RoxygenType: list(markdown = TRUE)
 RoxygenNote: 7.3.2
