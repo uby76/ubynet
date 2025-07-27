@@ -16,7 +16,7 @@ Imports:
     readr,
     igraph,
     tools,
-    picante
+    ape
 Suggests:
     progress,
     testthat

@@ -9,9 +9,6 @@
 #' @param clustering_method Method for hierarchical clustering (default: "average")
 #' @param build_tree Whether to build phylogenetic tree (default: TRUE)
 #' @return List containing transformation results, network, and phylogenetic tree
-#' @importFrom data.table fread setnames
-#' @importFrom igraph graph_from_data_frame clusters distances vcount ecount
-#' @importFrom picante as.phylo write.tree
 #' @export
 complete_transformation_analysis <- function(data, mol, trans_db, 
                                            error_term = 0.000010, 
@@ -149,11 +146,11 @@ detect_transformations <- function(data, mol, trans_db,
         dir.create(output_dir, recursive = TRUE)
     }
     
-    utils::write.csv(peak_2_peak, 
+    write.csv(peak_2_peak, 
               file.path(output_dir, paste0(sample_name, "_All-Trans_peak.2.peak.csv")),
               quote = FALSE, row.names = FALSE)
     
-    utils::write.csv(peak_profile,
+    write.csv(peak_profile,
               file.path(output_dir, paste0(sample_name, "_All-Trans_num.peak.trans.csv")),
               quote = FALSE, row.names = FALSE)
     
@@ -171,42 +168,53 @@ detect_transformations <- function(data, mol, trans_db,
 #' @param output_dir Output directory
 #' @param clustering_method Clustering method for tree construction
 #' @return List containing tree and network analysis results
-#' @importFrom data.table fread setnames
-#' @importFrom igraph graph_from_data_frame clusters distances
-#' @importFrom picante as.phylo write.tree
 #' @export
 build_phylogenetic_tree_from_files <- function(peak2peak_file, numtrans_file, 
                                               sample_name, output_dir = ".",
                                               clustering_method = "average") {
     
+    # Load required libraries
+    if (!requireNamespace("ape", quietly = TRUE)) {
+        stop("Package 'ape' is required but not installed. Please install it with: install.packages('ape')")
+    }
+    if (!requireNamespace("igraph", quietly = TRUE)) {
+        stop("Package 'igraph' is required but not installed. Please install it with: install.packages('igraph')")
+    }
+    
     if (!file.exists(peak2peak_file) || !file.exists(numtrans_file)) {
         stop("Required transformation files not found")
     }
     
-    peak.2.peak <- data.table::fread(peak2peak_file)
-    num.trans <- data.table::fread(numtrans_file)
+    # 使用基础R读取文件，避免data.table问题
+    peak.2.peak <- read.csv(peak2peak_file, stringsAsFactors = FALSE)
+    num.trans <- read.csv(numtrans_file, stringsAsFactors = FALSE)
     
-    peak.2.peak <- standardize_peak2peak_columns(peak.2.peak)
-    num.trans <- standardize_numtrans_columns(num.trans)
+    # 标准化列名
+    peak.2.peak <- standardize_peak2peak_columns_base(peak.2.peak)
+    num.trans <- standardize_numtrans_columns_base(num.trans)
     
+    # 移除不必要的列并添加权重
     unnecessary_cols <- c('Dist', 'Dist.plus', 'Dist.minus')
-    peak.2.peak <- peak.2.peak[, !names(peak.2.peak) %in% unnecessary_cols, with = FALSE]
-    peak.2.peak[, weight := 1]
+    peak.2.peak <- peak.2.peak[, !names(peak.2.peak) %in% unnecessary_cols, drop = FALSE]
+    peak.2.peak$weight <- 1
     
-    edges <- peak.2.peak[, .(from, to, type, weight, sample)]
-    vertices <- num.trans[, .(id, num.trans.involved.in, sample)]
+    # 选择需要的列
+    edges <- peak.2.peak[, c("from", "to", "type", "weight", "sample")]
+    vertices <- num.trans[, c("id", "num.trans.involved.in", "sample")]
     
-    net <- igraph::graph_from_data_frame(d = as.data.frame(edges), 
-                                vertices = as.data.frame(vertices), 
-                                directed = FALSE)
+    # 构建网络
+    net <- igraph::graph_from_data_frame(d = edges, vertices = vertices, directed = FALSE)
     
-    clus <- igraph::clusters(net)
+    # 使用components()代替deprecated的clusters()
+    clus <- igraph::components(net)
     max.clus.id <- which.max(clus$csize)
     max.clus.members <- names(clus$membership)[clus$membership == max.clus.id]
     
+    # 计算距离矩阵
     net.dist <- igraph::distances(net)
     net.dist <- net.dist[max.clus.members, max.clus.members]
     
+    # 标准化距离
     min_dist <- min(net.dist)
     max_dist <- max(net.dist)
     
@@ -214,10 +222,12 @@ build_phylogenetic_tree_from_files <- function(peak2peak_file, numtrans_file,
         net.dist <- (net.dist - min_dist) / (max_dist - min_dist)
     }
     
-    tree <- picante::as.phylo(stats::hclust(stats::as.dist(net.dist), method = clustering_method))
+    # 构建系统发育树
+    tree <- ape::as.phylo(stats::hclust(stats::as.dist(net.dist), method = clustering_method))
     
+    # 保存树文件
     tree_file <- file.path(output_dir, paste0(sample_name, "_TD_UPGMA.tre"))
-    picante::write.tree(tree, tree_file)
+    ape::write.tree(tree, tree_file)
     
     return(list(
         tree = tree,
@@ -267,8 +277,8 @@ analyze_existing_transformations <- function(sample_name = "Dataset_Name",
     return(result)
 }
 
-# Internal helper functions (not exported)
-standardize_peak2peak_columns <- function(df) {
+# Internal helper functions using base R (避免data.table问题)
+standardize_peak2peak_columns_base <- function(df) {
     col_mapping <- list(
         'peak' = 'id',
         'peak.x' = 'from', 
@@ -278,13 +288,13 @@ standardize_peak2peak_columns <- function(df) {
     
     for (old_name in names(col_mapping)) {
         if (old_name %in% colnames(df)) {
-            data.table::setnames(df, old_name, col_mapping[[old_name]])
+            colnames(df)[colnames(df) == old_name] <- col_mapping[[old_name]]
         }
     }
     return(df)
 }
 
-standardize_numtrans_columns <- function(df) {
+standardize_numtrans_columns_base <- function(df) {
     col_mapping <- list(
         'peak' = 'id',
         'num_trans_involved_in' = 'num.trans.involved.in'
@@ -292,7 +302,7 @@ standardize_numtrans_columns <- function(df) {
     
     for (old_name in names(col_mapping)) {
         if (old_name %in% colnames(df)) {
-            data.table::setnames(df, old_name, col_mapping[[old_name]])
+            colnames(df)[colnames(df) == old_name] <- col_mapping[[old_name]]
         }
     }
     return(df)
