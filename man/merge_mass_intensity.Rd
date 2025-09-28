@@ -2,7 +2,11 @@
 % Please edit documentation in R/merge_data.R
 \name{merge_mass_intensity}
 \alias{merge_mass_intensity}
+<<<<<<< HEAD
 \title{Merge Mass and Intensity from Multiple CSV Files (Simplified)}
+=======
+\title{Merge Mass and Intensity from Multiple CSV Files}
+>>>>>>> d1274ab60d19f2d38d863296acad0c5fc3347c5d
 \usage{
 merge_mass_intensity(
   dir_path,
@@ -21,8 +25,15 @@ merge_mass_intensity(
 \item{output_meta_file}{Path to save the auto-generated metadata file (optional).}
 }
 \value{
+<<<<<<< HEAD
 List containing merged data frames.
 }
 \description{
 Merge Mass and Intensity from Multiple CSV Files (Simplified)
+=======
+A peakData object with the merged data.
+}
+\description{
+Merge Mass and Intensity from Multiple CSV Files
+>>>>>>> d1274ab60d19f2d38d863296acad0c5fc3347c5d
 }

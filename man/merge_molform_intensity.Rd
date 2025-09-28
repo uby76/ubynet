@@ -2,7 +2,11 @@
 % Please edit documentation in R/merge_data.R
 \name{merge_molform_intensity}
 \alias{merge_molform_intensity}
+<<<<<<< HEAD
 \title{Merge Data Based on Molecular Formula (MolForm) with Filtering (Simplified)}
+=======
+\title{Merge Data Based on Molecular Formula (MolForm) with Filtering}
+>>>>>>> d1274ab60d19f2d38d863296acad0c5fc3347c5d
 \usage{
 merge_molform_intensity(
   dir_path,
@@ -24,8 +28,15 @@ merge_molform_intensity(
 \item{output_meta_file}{Path to save the auto-generated metadata file (optional).}
 }
 \value{
+<<<<<<< HEAD
 List containing merged data frames.
 }
 \description{
 Merge Data Based on Molecular Formula (MolForm) with Filtering (Simplified)
+=======
+A peakData object with the merged data.
+}
+\description{
+Merge Data Based on Molecular Formula (MolForm) with Filtering
+>>>>>>> d1274ab60d19f2d38d863296acad0c5fc3347c5d
 }
