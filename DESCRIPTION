@@ -11,7 +11,7 @@ Maintainer: Jianwei <jianwei363@gmail.com>
 Description: Functions for analyzing molecular data, including reaction matching, 
     molecular transformation network construction based on paired mass differences (PMD),
     and biochemical transformation detection (wx:uby076).
-<<<<<<< HEAD
+
 Depends: R (>= 3.5.0)
 Imports: data.table, dplyr, utils, readr, igraph, tools, ape
 Suggests: progress, testthat
