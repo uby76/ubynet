@@ -5,7 +5,7 @@
 适合处理 FTICR-MS 等超高分辨质谱数据的反应分析与分子转化研究。
 
 
-你这句话可以作为论文或报告里的引用说明。整理成正式引用形式可以是这样：
+整理成正式引用形式可以是这样：
 
 > In order to facilitate the integration of FT-ICR MS data across multiple samples, our team has developed **ubynet**, a specialized R-based software suite that is available for download on GitHub ([https://github.com/uby76/ubynet](https://github.com/uby76/ubynet)).
 
