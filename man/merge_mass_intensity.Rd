@@ -2,11 +2,7 @@
 % Please edit documentation in R/merge_data.R
 \name{merge_mass_intensity}
 \alias{merge_mass_intensity}
-<<<<<<< HEAD
-\title{Merge Mass and Intensity from Multiple CSV Files (Simplified)}
-=======
 \title{Merge Mass and Intensity from Multiple CSV Files}
->>>>>>> d1274ab60d19f2d38d863296acad0c5fc3347c5d
 \usage{
 merge_mass_intensity(
   dir_path,
@@ -16,24 +12,17 @@ merge_mass_intensity(
 )
 }
 \arguments{
-\item{dir_path}{The directory containing CSV files.}
+  \item{dir_path}{The directory containing CSV files.}
 
-\item{output_mass_intensity}{Path to save the merged Mass-Intensity file.}
+  \item{output_mass_intensity}{Path to save the merged Mass-Intensity file.}
 
-\item{output_mass_elements}{Path to save the Mass-Elements file.}
+  \item{output_mass_elements}{Path to save the Mass-Elements file.}
 
-\item{output_meta_file}{Path to save the auto-generated metadata file (optional).}
+  \item{output_meta_file}{Path to save the auto-generated metadata file (optional).}
 }
 \value{
-<<<<<<< HEAD
 List containing merged data frames.
 }
 \description{
-Merge Mass and Intensity from Multiple CSV Files (Simplified)
-=======
-A peakData object with the merged data.
-}
-\description{
-Merge Mass and Intensity from Multiple CSV Files
->>>>>>> d1274ab60d19f2d38d863296acad0c5fc3347c5d
+Merge Mass and Intensity from Multiple CSV Files.
 }
