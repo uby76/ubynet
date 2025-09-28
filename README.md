@@ -71,30 +71,6 @@ match_res2 <- match_reactions_by_mass_difference(
 )
 ```
 
-### 5. 构建 PMD 网络
-
-```r
-edges <- build_mass_pmd_network(
-  precursor_df = precursors,
-  product_df = products,
-  reaction_delta_df = reaction_defs,
-  mass_tolerance = 0.005
-)
-```
-
-### 6. 分子转化分析
-
-```r
-trans_res <- transformation_analysis(edges, ...)
-```
-
-### 7. 分子式差异比较
-
-```r
-compare_molforms("C6H12O6", "C5H10O5")
-# 返回 C, H, O 等元素的差异
-```
-
 ---
 
 ## 📖 函数说明
