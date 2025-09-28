@@ -537,4 +537,5 @@ merge_molform_intensity <- function(dir_path, output_molform_intensity, output_m
     )
     
     return(peakObj)
+    }
 }
