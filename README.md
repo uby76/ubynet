@@ -100,21 +100,23 @@ edges <- build_mass_pmd_network(
 
 
 ```r
+
+#1. 这里要使用1. 合并质量-强度数据来进行分析，因为主要是调用的mass进行的差值
 data <- read.csv("mass_int.csv", row.names = 1, check.names = FALSE)
 mol  <- read.csv("mass_el.csv", row.names = 1, check.names = FALSE)
 trans_db <- read.csv("Transformation_Database_07-2020.csv")
 
-# 3. 行名转为数值并保证一致
+# 2. 行名转为数值并保证一致
 rownames(data) <- as.numeric(rownames(data))
 rownames(mol)  <- as.numeric(rownames(mol))
 common_peaks <- intersect(rownames(data), rownames(mol))
 data <- data[common_peaks, , drop = FALSE]
 mol  <- mol[common_peaks, , drop = FALSE]
 
-# 4. 转换为二进制（存在即为1）
+# 3. 转换为二进制（存在即为1）
 data[data > 0] <- 1
 
-# 5. 运行完整分析（包括转化检测和树构建）
+# 4. 运行完整分析（包括转化检测和树构建）
 result <- complete_transformation_analysis(
   data = data,
   mol = mol,
