@@ -70,7 +70,7 @@ match_res2 <- match_reactions_by_mass_difference(
 
 
 
-### 5. 基于已知的分子式和MASS计算的PMD反应网络
+### 5. 基于已知的分子式和MASS计算的PMD反应网络（单样本）
 ### 参考文献：https://www.nature.com/articles/s41467-020-19989-y
 
 ```r
@@ -78,7 +78,7 @@ edges <- build_mass_pmd_network(
   mol_file = "MS_MolInfor1.csv",
   trans_file = "Transformation_Database_07-2020.csv",
   error_term = 0.00001,
-  output_dir = "MS_MolInfor2"
+  output_dir = "MS_MolInfor1"
 )
 
 ```
