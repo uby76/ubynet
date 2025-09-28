@@ -93,6 +93,42 @@ edges <- build_mass_pmd_network(
 )
 
 ```
+
+
+### 6. 基于输入的峰值矩阵、分子信息和转化数据库，检测可能的分子间转化关系，并构建系统发育树（所有样本）
+### 参考文献：https://www.nature.com/articles/s41467-020-19989-y
+
+
+```r
+data <- read.csv("mass_int.csv", row.names = 1, check.names = FALSE)
+mol  <- read.csv("mass_el.csv", row.names = 1, check.names = FALSE)
+trans_db <- read.csv("Transformation_Database_07-2020.csv")
+
+# 3. 行名转为数值并保证一致
+rownames(data) <- as.numeric(rownames(data))
+rownames(mol)  <- as.numeric(rownames(mol))
+common_peaks <- intersect(rownames(data), rownames(mol))
+data <- data[common_peaks, , drop = FALSE]
+mol  <- mol[common_peaks, , drop = FALSE]
+
+# 4. 转换为二进制（存在即为1）
+data[data > 0] <- 1
+
+# 5. 运行完整分析（包括转化检测和树构建）
+result <- complete_transformation_analysis(
+  data = data,
+  mol = mol,
+  trans_db = trans_db,
+  output_dir = "./results",   # 输出目录
+  sample_name = "MyDataset",  # 输出文件前缀
+  clustering_method = "average",
+  build_tree = TRUE
+)
+
+```
+
+
+
 ---
 
 ## 📖 函数说明
@@ -140,7 +176,35 @@ edges <- build_mass_pmd_network(
   - 在 `output_dir` 中生成 PMD 网络边表与相关结果文件  
   - 返回构建好的网络边表  
  
+---
 
+### `complete_transformation_analysis()`
+* **功能**：完整的生化转化分析流程。基于输入的峰值矩阵、分子信息和转化数据库，检测可能的分子间转化关系，并可选择性地构建系统发育树。
+* **输入**：
+
+  * `data`：数据矩阵 (CSV)，行为峰值，列为样本；值可为强度或二进制 (存在=1)
+  * `mol`：分子信息矩阵 (CSV)，行名需与 `data` 保持一致，通常包含质量或分子式信息
+  * `trans_db`：转化数据库文件 (CSV)，需包含 `Name` 和 `Mass` 两列
+  * `error_term`：质量差匹配容差 (默认 1e-5 Da)
+  * `output_dir`：结果输出目录 (默认当前工作目录)
+  * `sample_name`：输出文件名前缀 (默认 `"Dataset"`)
+  * `clustering_method`：层次聚类方法，用于系统树构建 (默认 `"average"`)
+  * `build_tree`：是否基于转化结果构建系统发育树 (默认 `TRUE`)
+* **输出**：
+
+  * 在 `output_dir` 中生成：
+
+    * `*_All-Trans_peak.2.peak.csv`：检测到的峰对及对应的转化关系
+    * `*_All-Trans_num.peak.trans.csv`：每个峰涉及的转化次数
+    * `*_TD_UPGMA.tre`：若 `build_tree=TRUE`，输出系统发育树 (可在 FigTree/iTOL 打开)
+  * 返回一个包含以下内容的列表：
+
+    * `transformations`：转化检测结果 (峰对与峰统计信息)
+    * `tree_analysis`：系统发育树与网络信息 (若 `build_tree=TRUE`)
+    * `sample_name`：数据集名称
+    * `parameters`：运行参数 (误差、聚类方法等)
+
+---
 
 ## 📊 函数总览表
 
@@ -151,3 +215,4 @@ edges <- build_mass_pmd_network(
 | `match_reactions_by_intensity`       | 基于强度变化匹配反应 | 2 个 CSV + 反应表 | 边表 + 反应摘要              |
 | `match_reactions_by_mass_difference` | 基于质量差匹配反应  | 2 个 CSV + 反应表 | 边表 + 反应摘要              |
 | `build_mass_pmd_network()` | PMD网络  | 样本数据和已知的反应数据库 | 边表 + 反应摘要              |
+| `complete_transformation_analysis()` | 分子转化系统发育树构建  | 合并后的数据 | 可能的反应和系统发育树              |
