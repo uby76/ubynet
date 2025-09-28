@@ -228,7 +228,6 @@ classify_Mass_intensity <- function(before, after, output_file = NULL) {
 
   return(merged_data)
 }
-=======
 #' Classify MolForm into product, resistant, and disappearance
 #'
 #' This function takes two CSV files or data frames representing "before" and "after" datasets,
@@ -459,5 +458,5 @@ classify_Mass_intensity <- function(before, after, output_file = NULL) {
 
   return(merged_data)
 }
->>>>>>> d1274ab60d19f2d38d863296acad0c5fc3347c5d
+
     
