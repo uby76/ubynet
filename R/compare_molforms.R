@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # R/compare_csv.R
 
 #' Compare MolForm columns between two CSV files

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #' Match reactions between two molecule datasets based on intensity filtering
 #'
 #' This function filters precursor and product molecules based on intensity changes,

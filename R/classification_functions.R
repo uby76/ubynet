@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #' Classify MolForm into product, resistant, and disappearance
 #'
 #' This function takes two CSV files or data frames representing "before" and "after" datasets,

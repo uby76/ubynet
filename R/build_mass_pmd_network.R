@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #' Build Mass-PMD Transformation Network
 #'
 #' Constructs a network of potential biochemical transformations based on 

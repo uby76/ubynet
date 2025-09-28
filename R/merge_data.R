@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #' Merge Mass and Intensity from Multiple CSV Files (Simplified)
 #'
 #' @param dir_path The directory containing CSV files.

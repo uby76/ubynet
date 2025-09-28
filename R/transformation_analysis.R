@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #' Complete biochemical transformation analysis pipeline
 #'
 #' @param data Data matrix with peaks as rows and samples as columns
