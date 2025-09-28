@@ -5,7 +5,7 @@ Title: Analysis of Molecular Data
 Version: 0.2.1
 =======
 Version: 0.1.5
->>>>>>> d1274ab60d19f2d38d863296acad0c5fc3347c5d
+
 Author: Jianwei <jianwei363@gmail.com>
 Maintainer: Jianwei <jianwei363@gmail.com>
 Description: Functions for analyzing molecular data, including reaction matching, 
