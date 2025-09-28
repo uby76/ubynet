@@ -2,41 +2,27 @@
 % Please edit documentation in R/merge_data.R
 \name{merge_molform_intensity}
 \alias{merge_molform_intensity}
-<<<<<<< HEAD
-\title{Merge Data Based on Molecular Formula (MolForm) with Filtering (Simplified)}
-=======
-\title{Merge Data Based on Molecular Formula (MolForm) with Filtering}
->>>>>>> d1274ab60d19f2d38d863296acad0c5fc3347c5d
+\title{Merge Molecular Formula and Intensity from Multiple CSV Files}
 \usage{
 merge_molform_intensity(
   dir_path,
   output_molform_intensity,
   output_molform_elements,
-  output_filtered_samples_dir,
   output_meta_file = NULL
 )
 }
 \arguments{
-\item{dir_path}{The directory containing CSV files.}
+  \item{dir_path}{The directory containing CSV files.}
 
-\item{output_molform_intensity}{Path to save the merged MolForm-Intensity file.}
+  \item{output_molform_intensity}{Path to save the merged MolForm-Intensity file.}
 
-\item{output_molform_elements}{Path to save the MolForm-Elements file.}
+  \item{output_molform_elements}{Path to save the MolForm-Elements file.}
 
-\item{output_filtered_samples_dir}{Directory to save individual filtered sample files.}
-
-\item{output_meta_file}{Path to save the auto-generated metadata file (optional).}
+  \item{output_meta_file}{Path to save the auto-generated metadata file (optional).}
 }
 \value{
-<<<<<<< HEAD
 List containing merged data frames.
 }
 \description{
-Merge Data Based on Molecular Formula (MolForm) with Filtering (Simplified)
-=======
-A peakData object with the merged data.
-}
-\description{
-Merge Data Based on Molecular Formula (MolForm) with Filtering
->>>>>>> d1274ab60d19f2d38d863296acad0c5fc3347c5d
+Merge molecular formulas and intensity data from multiple CSV files.
 }
