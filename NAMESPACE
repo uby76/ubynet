@@ -16,6 +16,8 @@ export(match_reactions_by_intensity)
 export(match_reactions_by_mass_difference)
 export(merge_mass_intensity)
 export(merge_molform_intensity)
+export(build_molecular_dendrogram)
+
 importFrom(dplyr,arrange)
 importFrom(dplyr,count)
 importFrom(dplyr,desc)
