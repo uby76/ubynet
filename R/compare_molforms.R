@@ -339,7 +339,7 @@ compare_multiple_datasets <- function(file_list, output_dir = NULL, comparison_t
     }
     
     return(results)
-=======
+
 # R/compare_csv.R
 
 #' Compare MolForm columns between two CSV files
@@ -681,5 +681,5 @@ compare_multiple_datasets <- function(file_list, output_dir = NULL, comparison_t
     }
     
     return(results)
->>>>>>> d1274ab60d19f2d38d863296acad0c5fc3347c5d
+    }
 }
