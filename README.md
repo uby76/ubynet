@@ -35,28 +35,56 @@ remotes::install_github("uby76/ubynet")
 
 ## 🚀 使用示例
 
-### 1. 合并质量-强度数据
+### 1. 合并质量-强度数据（根据mass合并数据）
 
 ```r
+#基于mass的匹配
+#所有的csv文件放在E:/data/test，文件夹下
 res <- merge_mass_intensity(
-  dir_path = "data/csv_files",
-  output_mass_intensity = "out/mass_int.csv",
-  output_mass_elements = "out/mass_el.csv",
-  output_meta_file = "out/meta.csv"
+  dir_path = "E:/data/test",
+  output_mass_intensity = "E:/data/test/mass_int.csv",
+  output_mass_elements = "E:/data/test/mass_el.csv"
 )
 ```
 
-### 2. 合并分子式-强度数据
+### 2. 合并分子式-强度数据（根据Molform合并数据）
 
 ```r
-res2 <- merge_molform_intensity(
-  dir_path = "data/csv_files",
-  output_molform_intensity = "out/molint.csv",
-  output_molform_elements = "out/molel.csv"
+#基于molform的匹配
+#所有的csv文件放在E:/data，文件夹下
+dir_path <- "E:/data/test"
+#合并后输出的intensity
+output_molform_intensity <- "E:/data/test/merged_molform_intensity.csv"
+#合并后输出的分子信息
+output_molform_elements <- "E:/data/test/merged_molform_elements.csv"
+#过滤后的样本（csv）存放位置
+output_filtered_samples_dir <- "E:/data/test/filtered_samples"
+
+merge_molform_intensity(
+  dir_path = 'dir_path',
+  output_molform_intensity = output_molform_intensity,
+  output_molform_elements = output_molform_elements,
+  output_filtered_samples_dir = output_filtered_samples_dir
 )
 ```
 
-### 3. 基于分子式变化的反应匹配
+### 3. 前后样本的差异（disappearance，product，resistant），慎重使用存在假阳性
+
+```r
+# 不考虑intensity的变化，根据MolForm进行分析
+classify_MolForm("MS_MolInfor1_filtered.csv", "MS_MolInfor2_filtered.csv", "classified_results_formul.csv")
+# 不考虑intensity的变化，根据Mass进行分析
+classify_Mass("MS_MolInfor1_filtered.csv", "MS_MolInfor2_filtered.csv", "classified_results_Mass.csv")
+
+# 考虑intensity的变化，根据MolForm进行分析
+classify_MolForm_intensity("MS_MolInfor1_filtered.csv", "MS_MolInfor2_filtered.csv", "classified_results_formul_intensity.csv")
+# 考虑intensity的变化，根据Mass进行分析
+classify_Mass_intensity("MS_MolInfor1_filtered.csv", "MS_MolInfor2_filtered.csv", "classified_results_Mass_intensity.csv")
+
+```
+
+
+### 4. 基于分子式变化的反应匹配（慎重使用存在假阳性）
 
 ```r
 match_res <- match_reactions_by_intensity(
@@ -67,7 +95,7 @@ match_res <- match_reactions_by_intensity(
 )
 ```
 
-### 4. 基于质量差的反应匹配
+### 5. 基于质量差的反应匹配（慎重使用存在假阳性）
 
 ```r
 match_res2 <- match_reactions_by_mass_difference(
@@ -81,7 +109,7 @@ match_res2 <- match_reactions_by_mass_difference(
 
 
 
-### 5. 基于已知的分子式和MASS计算的PMD反应网络（单样本）
+### 6. 基于已知的分子式和MASS计算的PMD反应网络（单样本）
 ### 参考文献：https://www.nature.com/articles/s41467-020-19989-y
 
 ```r
