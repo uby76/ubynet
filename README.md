@@ -148,16 +148,6 @@ res <- build_molecular_dendrogram(
 ### 6.3 基于的分子信息和分子间转化关系构建系统发育树（）
 
 ```r
-#  尽可能的补充这些指数信息
-#  指数信息："C", "H", "O", "N", "S", "P", "DBE", "AI_Mod", "kdefect"
-#  比例信息："OtoC_ratio", "HtoC_ratio", "NtoC_ratio", "PtoC_ratio", "NtoP_ratio"
-
-res <- build_molecular_dendrogram(
-  mol_file = "mass_el.csv",
-  sample_name = "Dataset",
-  output_dir = "results",
-  clustering_method = "average"
-)
 
 ```
 
