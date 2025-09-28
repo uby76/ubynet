@@ -98,7 +98,7 @@ edges <- build_mass_pmd_network(
 ### 6. 构建树（有三种构建方法）
 ### 参考文献：https://www.nature.com/articles/s41467-020-19989-y
 
-### 6.1 基于的分子间转化关系构建系统发育树（所有样本）
+### 6.1 基于的分子间转化关系构建系统发育树
 
 ```r
 
@@ -129,7 +129,7 @@ result <- complete_transformation_analysis(
 
 ```
 
-### 6.2 基于的分子信息构建系统发育树（）
+### 6.2 基于的分子信息构建系统发育树
 
 ```r
 #  尽可能的每一个样本中计算这些指数，列名一定要一致
@@ -143,7 +143,7 @@ res <- build_molecular_dendrogram(
 )
 
 ```
-### 6.3 基于的分子信息和分子间转化关系构建系统发育树（）
+### 6.3 基于的分子信息和分子间转化关系构建系统发育树
 
 ```r
 result <- build_weighted_dendrogram(
