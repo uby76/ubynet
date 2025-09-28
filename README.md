@@ -101,7 +101,7 @@ edges <- build_mass_pmd_network(
 
 ```r
 
-#1. 这里要使用1. 合并质量-强度数据来进行分析，因为主要是调用的mass进行的差值
+# 1. 这里要使用1. 合并质量-强度数据来进行分析，因为主要是调用的mass进行的差值
 data <- read.csv("mass_int.csv", row.names = 1, check.names = FALSE)
 mol  <- read.csv("mass_el.csv", row.names = 1, check.names = FALSE)
 trans_db <- read.csv("Transformation_Database_07-2020.csv")
