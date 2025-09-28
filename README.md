@@ -122,8 +122,7 @@ result <- complete_transformation_analysis(
   data = data,
   mol = mol,
   trans_db = trans_db,
-  output_dir = "./results",   # 输出目录
-  sample_name = "MyDataset",  # 输出文件前缀
+  sample_name = "data1",  # 输出文件前缀
   clustering_method = "average",
   build_tree = TRUE
 )
@@ -139,8 +138,7 @@ result <- complete_transformation_analysis(
 
 res <- build_molecular_dendrogram(
   mol_file = "mass_el.csv",
-  sample_name = "Dataset",
-  output_dir = "results",
+  sample_name = "data1",
   clustering_method = "average"
 )
 
@@ -148,6 +146,12 @@ res <- build_molecular_dendrogram(
 ### 6.3 基于的分子信息和分子间转化关系构建系统发育树（）
 
 ```r
+result <- build_weighted_dendrogram(
+    mol_file = "mass_el.csv",
+    peak2peak_file = "data1_peak.csv", 
+    numtrans_file = "data1_trans.csv",
+    sample_name = "data1"
+)
 
 ```
 
