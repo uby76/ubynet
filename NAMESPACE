@@ -13,10 +13,7 @@ export(compare_multiple_datasets)
 export(complete_transformation_analysis)
 export(detect_transformations)
 export(match_reactions_by_intensity)
-<<<<<<< HEAD
 export(match_reactions_by_mass_difference)
-=======
->>>>>>> d1274ab60d19f2d38d863296acad0c5fc3347c5d
 export(merge_mass_intensity)
 export(merge_molform_intensity)
 importFrom(dplyr,arrange)
