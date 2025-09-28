@@ -68,6 +68,20 @@ match_res2 <- match_reactions_by_mass_difference(
 )
 ```
 
+
+---
+
+### 5. 基于已知的分子式和MASS计算的PMD反应网络
+
+```r
+edges <- build_mass_pmd_network(
+  mol_file = "MS_MolInfor1.csv",
+  trans_file = "Transformation_Database_07-2020.csv",
+  error_term = 0.00001,
+  output_dir = "MS_MolInfor2"
+)
+
+
 ---
 
 ## 📖 函数说明
@@ -104,6 +118,18 @@ match_res2 <- match_reactions_by_mass_difference(
 
 ---
 
+### `build_mass_pmd_network()`
+* **功能**：基于分子信息文件和反应数据库，构建成对质量差 (PMD) 分子转化网络。  
+* **输入**：  
+  - `mol_file`：分子信息文件 (CSV)，需包含分子式和质量信息  
+  - `trans_file`：反应数据库文件 (CSV)，需包含 `reaction` 和 `mass_difference` 列  
+  - `error_term`：质量差匹配容差 (默认 1e-5 Da)  
+  - `output_dir`：结果输出目录  
+* **输出**：  
+  - 在 `output_dir` 中生成 PMD 网络边表与相关结果文件  
+  - 返回构建好的网络边表  
+ 
+
 
 ## 📊 函数总览表
 
@@ -113,3 +139,4 @@ match_res2 <- match_reactions_by_mass_difference(
 | `merge_molform_intensity`            | 合并分子式-强度数据 | CSV 文件夹       | 合并 molform-intensity 表 |
 | `match_reactions_by_intensity`       | 基于强度变化匹配反应 | 2 个 CSV + 反应表 | 边表 + 反应摘要              |
 | `match_reactions_by_mass_difference` | 基于质量差匹配反应  | 2 个 CSV + 反应表 | 边表 + 反应摘要              |
+| `build_mass_pmd_network()` | PMD网络  | 样本数据和已知的反应数据库 | 边表 + 反应摘要              |
