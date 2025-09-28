@@ -34,8 +34,8 @@ complete_transformation_analysis <- function(data, mol, trans_db,
     tree_result <- NULL
     if (build_tree && nrow(transformation_results$peak_2_peak) > 0) {
         cat("[STEP] Building phylogenetic tree...\n")
-        peak2peak_file <- file.path(output_dir, paste0(sample_name, "_All-Trans_peak.2.peak.csv"))
-        numtrans_file <- file.path(output_dir, paste0(sample_name, "_All-Trans_num.peak.trans.csv"))
+        peak2peak_file <- file.path(output_dir, paste0(sample_name, "_peak.csv"))
+        numtrans_file <- file.path(output_dir, paste0(sample_name, "_trans.csv"))
         
         tree_result <- build_phylogenetic_tree_from_files(
             peak2peak_file = peak2peak_file,
@@ -140,10 +140,10 @@ detect_transformations <- function(data, mol, trans_db,
     }
     
     write.csv(peak_2_peak, 
-              file.path(output_dir, paste0(sample_name, "_All-Trans_peak.2.peak.csv")),
+              file.path(output_dir, paste0(sample_name, "_peak.csv")),
               quote = FALSE, row.names = FALSE)
     write.csv(peak_profile,
-              file.path(output_dir, paste0(sample_name, "_All-Trans_num.peak.trans.csv")),
+              file.path(output_dir, paste0(sample_name, "_trans.csv")),
               quote = FALSE, row.names = FALSE)
     cat("[DONE] Transformation results saved to:", output_dir, "\n")
     
