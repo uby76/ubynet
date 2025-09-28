@@ -95,9 +95,10 @@ edges <- build_mass_pmd_network(
 ```
 
 
-### 6. 基于的分子间转化关系构建系统发育树（所有样本）
+### 6. 构建树（有三种构建方法）
 ### 参考文献：https://www.nature.com/articles/s41467-020-19989-y
 
+### 6.1 基于的分子间转化关系构建系统发育树（所有样本）
 
 ```r
 
@@ -129,7 +130,36 @@ result <- complete_transformation_analysis(
 
 ```
 
+### 6.2 基于的分子信息构建系统发育树（）
 
+```r
+#  尽可能的每一个样本中计算这些指数，列名一定要一致
+#  指数信息："C", "H", "O", "N", "S", "P", "DBE", "AI_Mod", "kdefect"
+#  比例信息："OtoC_ratio", "HtoC_ratio", "NtoC_ratio", "PtoC_ratio", "NtoP_ratio"
+
+res <- build_molecular_dendrogram(
+  mol_file = "mass_el.csv",
+  sample_name = "Dataset",
+  output_dir = "results",
+  clustering_method = "average"
+)
+
+```
+### 6.3 基于的分子信息和分子间转化关系构建系统发育树（）
+
+```r
+#  尽可能的补充这些指数信息
+#  指数信息："C", "H", "O", "N", "S", "P", "DBE", "AI_Mod", "kdefect"
+#  比例信息："OtoC_ratio", "HtoC_ratio", "NtoC_ratio", "PtoC_ratio", "NtoP_ratio"
+
+res <- build_molecular_dendrogram(
+  mol_file = "mass_el.csv",
+  sample_name = "Dataset",
+  output_dir = "results",
+  clustering_method = "average"
+)
+
+```
 
 ---
 
