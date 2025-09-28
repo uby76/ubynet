@@ -306,7 +306,6 @@ standardize_numtrans_columns_base <- function(df) {
         }
     }
     return(df)
-=======
 #' Complete biochemical transformation analysis pipeline
 #'
 #' @param data Data matrix with peaks as rows and samples as columns
@@ -615,5 +614,4 @@ standardize_numtrans_columns_base <- function(df) {
         }
     }
     return(df)
->>>>>>> d1274ab60d19f2d38d863296acad0c5fc3347c5d
 }

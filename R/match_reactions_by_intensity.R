@@ -120,7 +120,6 @@ match_reactions_by_intensity <- function(file1, file2, reaction_delta_file, out_
 
   message("✅ Done! Results saved to:\n- ", out_file1, "\n- ", out_file2)
   message("📚 Reference: 10.1016/j.watres.2020.116484")
-=======
 #' Match reactions between two molecule datasets based on intensity filtering
 #'
 #' This function filters precursor and product molecules based on intensity changes,
@@ -243,5 +242,5 @@ match_reactions_by_intensity <- function(file1, file2, reaction_delta_file, out_
 
   message("✅ Done! Results saved to:\n- ", out_file1, "\n- ", out_file2)
   message("📚 Reference: 10.1016/j.watres.2020.116484")
->>>>>>> d1274ab60d19f2d38d863296acad0c5fc3347c5d
+  }
 }

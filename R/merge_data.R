@@ -222,7 +222,6 @@ merge_molform_intensity <- function(dir_path, output_molform_intensity, output_m
         sample_ids = actual_sample_ids,
         filtered_data = filtered_data_list
     ))
-=======
 #' Merge Mass and Intensity from Multiple CSV Files
 #'
 #' @param dir_path The directory containing CSV files.
@@ -538,5 +537,4 @@ merge_molform_intensity <- function(dir_path, output_molform_intensity, output_m
     )
     
     return(peakObj)
->>>>>>> d1274ab60d19f2d38d863296acad0c5fc3347c5d
 }
