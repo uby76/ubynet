@@ -24,5 +24,5 @@ merge_molform_intensity(
 List containing merged data frames.
 }
 \description{
-Merge molecular formulas and intensity data from multiple CSV files.
+Merge molecular formula and intensity data from multiple CSV files.
 }
