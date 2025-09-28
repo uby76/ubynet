@@ -4,10 +4,6 @@
 它提供了从分子数据合并、质量差反应匹配，到构建基于成对质量差 (PMD) 的分子转化网络的完整工具链。  
 适合处理 FTICR-MS 等超高分辨质谱数据的反应分析与分子转化研究。
 
-ubynet is an R package designed for molecular data analysis and transformation network construction.
-It provides a complete toolchain covering tasks from molecular data merging and mass-difference reaction matching to the construction of molecular transformation networks based on paired mass differences (PMD).
-It is particularly suitable for reaction analysis and molecular transformation studies using ultrahigh-resolution mass spectrometry data such as FTICR-MS.
-
 
 你这句话可以作为论文或报告里的引用说明。整理成正式引用形式可以是这样：
 
