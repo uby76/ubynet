@@ -39,6 +39,7 @@ remotes::install_github("uby76/ubynet")
 [`两个示例数据`](https://github.com/uby76/ubynet/tree/main/testdata)
 ### 所有的函数使用的数据格式均为此模版，注意列名一致即可！
 
+---
 ### 1. 合并质量-强度数据（根据mass合并数据）
 
 ```r
