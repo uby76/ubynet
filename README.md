@@ -60,11 +60,11 @@ output_molform_elements <- "E:/data/test/merged_molform_elements.csv"
 #过滤后的样本（csv）存放位置
 output_filtered_samples_dir <- "E:/data/test/filtered_samples"
 
-merge_molform_intensity(
-  dir_path = 'dir_path',
-  output_molform_intensity = output_molform_intensity,
-  output_molform_elements = output_molform_elements,
-  output_filtered_samples_dir = output_filtered_samples_dir
+peakObj <- merge_molform_intensity(
+    dir_path = dir_path,
+    output_molform_intensity = output_molform_intensity,
+    output_molform_elements = output_molform_elements,
+    output_filtered_samples_dir = output_filtered_samples_dir
 )
 ```
 
