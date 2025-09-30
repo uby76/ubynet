@@ -74,15 +74,17 @@ peakObj <- merge_molform_intensity(
 ### 3. 前后样本的差异（disappearance，product，resistant），慎重使用存在假阳性
 
 ```r
+
 # 不考虑intensity的变化，根据MolForm进行分析
-classify_MolForm("MS_MolInfor1_filtered.csv", "MS_MolInfor2_filtered.csv", "classified_results_formul.csv")
+classify_MolForm("inflow.csv", "outflow.csv", "classified_results_formul.csv")
 # 不考虑intensity的变化，根据Mass进行分析
-classify_Mass("MS_MolInfor1_filtered.csv", "MS_MolInfor2_filtered.csv", "classified_results_Mass.csv")
+classify_Mass("inflow.csv", "outflow.csv", "classified_results_Mass.csv")
 
 # 考虑intensity的变化，根据MolForm进行分析
-classify_MolForm_intensity("MS_MolInfor1_filtered.csv", "MS_MolInfor2_filtered.csv", "classified_results_formul_intensity.csv")
+classify_MolForm_intensity("inflow.csv", "outflow.csv", "classified_results_formul_intensity.csv")
 # 考虑intensity的变化，根据Mass进行分析
-classify_Mass_intensity("MS_MolInfor1_filtered.csv", "MS_MolInfor2_filtered.csv", "classified_results_Mass_intensity.csv")
+classify_Mass_intensity("inflow.csv", "outflow.csv", "classified_results_Mass_intensity.csv")
+
 
 ```
 
