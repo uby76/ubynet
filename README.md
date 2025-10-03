@@ -43,6 +43,8 @@ remotes::install_github("uby76/ubynet")
 ### 1. 合并质量-强度数据（根据mass合并数据）
 
 ```r
+library(tidyr)
+library(ubynet)
 #基于mass的匹配
 #所有的csv文件放在E:/data/test，文件夹下
 res <- merge_mass_intensity(
@@ -55,6 +57,8 @@ res <- merge_mass_intensity(
 ### 2. 合并分子式-强度数据（根据Molform合并数据）
 
 ```r
+library(tidyr)
+library(ubynet)
 #基于molform的匹配
 #所有的csv文件放在E:/data，文件夹下
 dir_path <- "E:/data/test"
@@ -76,7 +80,8 @@ peakObj <- merge_molform_intensity(
 ### 3. 前后样本的差异（disappearance，product，resistant），慎重使用存在假阳性
 
 ```r
-
+library(tidyr)
+library(ubynet)
 # 不考虑intensity的变化，根据MolForm进行分析
 classify_MolForm("inflow.csv", "outflow.csv", "classified_results_formul.csv")
 # 不考虑intensity的变化，根据Mass进行分析
@@ -94,6 +99,8 @@ classify_Mass_intensity("inflow.csv", "outflow.csv", "classified_results_Mass_in
 ### 4. 基于分子式变化的反应匹配（慎重使用存在假阳性）
 
 ```r
+library(tidyr)
+library(ubynet)
 match_res <- match_reactions_by_intensity(
   file1 = "inflow.csv",
   file2 = "outflow.csv",
@@ -105,6 +112,8 @@ match_res <- match_reactions_by_intensity(
 ### 5. 基于质量差的反应匹配（慎重使用存在假阳性）
 
 ```r
+library(tidyr)
+library(ubynet)
 match_res2 <- match_reactions_by_mass_difference(
   file1 = "inflow.csv",
   file2 = "outflow.csv",
@@ -120,6 +129,8 @@ match_res2 <- match_reactions_by_mass_difference(
 ### 参考文献：https://www.nature.com/articles/s41467-020-19989-y
 
 ```r
+library(tidyr)
+library(ubynet)
 edges <- build_mass_pmd_network(
   mol_file = "MS_MolInfor1.csv",
   trans_file = "Transformation_Database_07-2020.csv",
@@ -136,7 +147,8 @@ edges <- build_mass_pmd_network(
 ### 7.1 基于的分子间转化关系构建系统发育树
 
 ```r
-
+library(tidyr)
+library(ubynet)
 # 1. 这里要使用「1. 合并质量-强度数据」来进行分析，因为主要是调用的mass进行的差值
 data <- read.csv("mass_int.csv", row.names = 1, check.names = FALSE)
 mol  <- read.csv("mass_el.csv", row.names = 1, check.names = FALSE)
@@ -167,6 +179,8 @@ result <- complete_transformation_analysis(
 ### 7.2 基于的分子信息构建系统发育树
 
 ```r
+library(tidyr)
+library(ubynet)
 #  尽可能的每一个样本中计算这些指数，列名一定要一致
 #  指数信息："C", "H", "O", "N", "S", "P", "DBE", "AI_Mod", "kdefect"
 #  比例信息："OtoC_ratio", "HtoC_ratio", "NtoC_ratio", "PtoC_ratio", "NtoP_ratio"
@@ -181,6 +195,8 @@ res <- build_molecular_dendrogram(
 ### 7.3 基于的分子信息和分子间转化关系构建系统发育树
 
 ```r
+library(tidyr)
+library(ubynet)
 result <- build_weighted_dendrogram(
     mol_file = "mass_el.csv",
     peak2peak_file = "data1_peak.csv", 
