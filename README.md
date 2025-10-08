@@ -53,6 +53,7 @@ res <- merge_mass_intensity(
   output_mass_elements = "E:/data/test/mass_el.csv"
 )
 ```
+![Figure 1](images/figure2.png)
 
 ### 2. 合并分子式-强度数据（根据Molform合并数据）
 
@@ -76,6 +77,8 @@ peakObj <- merge_molform_intensity(
     output_filtered_samples_dir = output_filtered_samples_dir
 )
 ```
+![Figure 1](images/figure3.png)
+
 
 ### 3. 前后样本的差异（disappearance，product，resistant），慎重使用存在假阳性
 
