@@ -94,10 +94,8 @@ classify_Mass("inflow.csv", "outflow.csv", "classified_results_Mass.csv")
 classify_MolForm_intensity("inflow.csv", "outflow.csv", "classified_results_formul_intensity.csv")
 # 考虑intensity的变化，根据Mass进行分析
 classify_Mass_intensity("inflow.csv", "outflow.csv", "classified_results_Mass_intensity.csv")
-
-
 ```
-
+![Figure 4](images/figure4.png)
 
 ### 4. 基于分子式变化的反应匹配（慎重使用存在假阳性）
 
