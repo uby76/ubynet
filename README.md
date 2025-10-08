@@ -105,7 +105,7 @@ library(ubynet)
 match_res <- match_reactions_by_intensity(
   file1 = "inflow.csv",
   file2 = "outflow.csv",
-  reaction_delta_file = "reaction_deltas.csv",
+  reaction_delta_file = "reaction_delta.csv",
   out_dir = "results"
 )
 ```
@@ -118,7 +118,7 @@ library(ubynet)
 match_res2 <- match_reactions_by_mass_difference(
   file1 = "inflow.csv",
   file2 = "outflow.csv",
-  reaction_delta_file = "reaction_deltas.csv",
+  reaction_delta_file = "reaction_delta.csv",
   out_dir = "results",
   mass_tolerance = 0.005 #设置容差
 )
