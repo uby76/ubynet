@@ -123,6 +123,7 @@ match_res2 <- match_reactions_by_mass_difference(
   mass_tolerance = 0.005 #设置容差
 )
 ```
+![Figure 5](images/figure5.png)
 
 
 
