@@ -68,7 +68,7 @@ calculate_car_matrix <- function(
     }
   }
   
-  if (verbose) cat("✅ \n")
+  if (verbose) cat("✅ Dependency check completed\n")
   
   # ========== 2. Read CSV Data ==========
   if (!file.exists(csv_file)) {
@@ -79,7 +79,7 @@ calculate_car_matrix <- function(
   num_cols <- sapply(df, is.numeric)
   df[num_cols][is.na(df[num_cols])] <- 0
   
-  if (verbose) cat("✅ data:", nrow(df), "line \n")
+  if (verbose) cat("✅ Data reading completed,", nrow(df), "rows in total\n")
   
   # ========== 3. Create Database and Write Origin Table ==========
   con <- DBI::dbConnect(RSQLite::SQLite(), db_path)
@@ -87,7 +87,7 @@ calculate_car_matrix <- function(
   if (DBI::dbExistsTable(con, "origin")) DBI::dbRemoveTable(con, "origin")
   DBI::dbWriteTable(con, "origin", df)
   
-  if (verbose) cat("✅ in origin 表\n")
+  if (verbose) cat("✅ Origin table written\n")
   
   # ========== 4. Build Matrix ==========
   data <- DBI::dbReadTable(con, "origin")
@@ -95,7 +95,7 @@ calculate_car_matrix <- function(
   rownames(mat) <- data$MolForm
   n <- nrow(mat)
   
-  if (verbose) cat("✅ make", n, "line \n")
+  if (verbose) cat("✅ Matrix construction completed,", n, "rows in total\n")
   
   # ========== 5. Define Vectorized CAR Function ==========
   calc_CAR_vec <- function(C1, H1, O1, C2, H2, O2) {
@@ -108,13 +108,13 @@ calculate_car_matrix <- function(
   pairs <- combn(n, 2)
   total_pairs <- ncol(pairs)
   
-  if (verbose) cat("⚙️ ", total_pairs, "\n")
+  if (verbose) cat("⚙️ Row pairs generated,", total_pairs, "combinations in total\n")
   
   # ========== 7. Calculate CAR with Progress Bar ==========
   if (verbose) {
     pb <- progress::progress_bar$new(
       total = total_pairs,
-      format = "⏳ [:bar] :percent : :eta",
+      format = "⏳ [:bar] :percent Remaining: :eta",
       clear = FALSE, width = 70
     )
   }
@@ -128,7 +128,7 @@ calculate_car_matrix <- function(
   
   if (verbose) {
     pb$tick(total_pairs)
-    cat("\n✅ ", length(keep), "CAR ∈ [", car_min, ",", car_max, "]\n")
+    cat("\n✅ Filtered", length(keep), "pairs meeting CAR ∈ [", car_min, ",", car_max, "]\n")
   }
   
   # ========== 8. Calculate Differences ==========
@@ -142,7 +142,7 @@ calculate_car_matrix <- function(
     O = diff_mat[, "O"], S = diff_mat[, "S"], CAR = CAR[keep]
   )
   
-  if (verbose) cat("🧩 ", nrow(results), "\n")
+  if (verbose) cat("🧩 Difference matrix generated,", nrow(results), "records in total\n")
   
   # ========== 9. Write car_matrix Table ==========
   if (DBI::dbExistsTable(con, "car_matrix")) DBI::dbRemoveTable(con, "car_matrix")
@@ -150,7 +150,7 @@ calculate_car_matrix <- function(
   DBI::dbWriteTable(con, "car_matrix", results)
   DBI::dbExecute(con, "COMMIT;")
   
-  if (verbose) cat("✅ car_matrix \n")
+  if (verbose) cat("✅ car_matrix table written\n")
   
   # ========== 10. Molecular Formula Composition Function ==========
   compose_formula <- function(C, H, N, O, S) {
@@ -169,13 +169,13 @@ calculate_car_matrix <- function(
   row_n <- nrow(results)
   mode <- if (row_n <= 50000) "mapply" else "data.table"
   
-  if (verbose) cat("：", mode, "(：", row_n, ")\n")
+  if (verbose) cat("🧠 Auto-selected mode:", mode, "(Data rows:", row_n, ")\n")
   
   # ========== 12. Generate Standardized Molecular Formulas ==========
   if (verbose) {
     pb2 <- progress::progress_bar$new(
       total = row_n,
-      format = "🔬 [:bar] :percent: :eta",
+      format = "🔬 [:bar] :percent Remaining: :eta",
       clear = FALSE, width = 70
     )
     tick_every <- ceiling(row_n / 100)
@@ -204,7 +204,7 @@ calculate_car_matrix <- function(
   
   if (verbose) {
     pb2$tick(row_n)
-    cat("\n✅ \n")
+    cat("\n✅ Standardized molecular formulas generated\n")
   }
   
   # ========== 13. Write car_matrix_formula Table ==========
@@ -213,13 +213,13 @@ calculate_car_matrix <- function(
   DBI::dbWriteTable(con, "car_matrix_formula", results)
   DBI::dbExecute(con, "COMMIT;")
   
-  if (verbose) cat("✅ ）\n")
+  if (verbose) cat("✅ car_matrix_formula table written (containing all molecular formulas)\n")
   
   # ========== 14. Filter Small Molecules ==========
   small_df <- subset(results, Diff_Formula %in% small_molecules)
   filtered_df <- subset(results, !(Diff_Formula %in% small_molecules))
   
-  if (verbose) cat("🚫 filter：", nrow(small_df), "filtered", nrow(filtered_df), " \n")
+  if (verbose) cat("🚫 Small molecule filtering:", nrow(small_df), "small molecules,", nrow(filtered_df), "remaining\n")
   
   # ========== 15. Write Small Molecules Table ==========
   if (DBI::dbExistsTable(con, "car_matrix_smallmolecules")) {
@@ -229,7 +229,7 @@ calculate_car_matrix <- function(
   DBI::dbWriteTable(con, "car_matrix_smallmolecules", small_df)
   DBI::dbExecute(con, "COMMIT;")
   
-  if (verbose) cat("✅ car_matrix_smallmolecules\n")
+  if (verbose) cat("✅ Small molecules table car_matrix_smallmolecules written\n")
   
   # ========== 16. Write Filtered Data Table ==========
   if (DBI::dbExistsTable(con, "car_matrix_filtered")) {
@@ -239,10 +239,10 @@ calculate_car_matrix <- function(
   DBI::dbWriteTable(con, "car_matrix_filtered", filtered_df)
   DBI::dbExecute(con, "COMMIT;")
   
-  if (verbose) cat("✅ car_matrix_filtered\n")
+  if (verbose) cat("✅ Filtered table car_matrix_filtered written\n")
   
   # ========== 17. Frequency Statistics ==========
-  if (verbose) cat("📊 Diff_Formula frequency statistics in progress (small molecules excluded)...\n")
+  if (verbose) cat("📊 Performing Diff_Formula frequency statistics (small molecules excluded)...\n")
   
   formula_summary <- filtered_df %>%
     dplyr::filter(Diff_Formula != "") %>%
@@ -259,7 +259,7 @@ calculate_car_matrix <- function(
   DBI::dbWriteTable(con, "formula_summary", formula_summary)
   DBI::dbExecute(con, "COMMIT;")
   
-  if (verbose) cat("✅ formula_summary", nrow(formula_summary), "unique molecular formula\n")
+  if (verbose) cat("✅ formula_summary table written,", nrow(formula_summary), "unique molecular formulas in total\n")
   
   # ========== 19. Export Top 50 ==========
   top50 <- head(formula_summary, 50)
@@ -271,7 +271,7 @@ calculate_car_matrix <- function(
   
   if (export_top50) {
     write.csv(top50, file = output_file, row.names = FALSE)
-    if (verbose) cat("\n✅ Exported：", output_file, "\n")
+    if (verbose) cat("\n✅ Exported:", output_file, "\n")
   }
   
   # ========== 20. Prepare Return Object ==========
@@ -291,7 +291,7 @@ calculate_car_matrix <- function(
     stats = stats
   )
   
-  if (verbose) cat("\n🎉 Analysis complete!\n")
+  if (verbose) cat("\n🎉 Analysis completed!\n")
   
   return(invisible(result))
 }
