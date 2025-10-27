@@ -1,7 +1,7 @@
 Package: ubynet
 Type: Package
 Title: Analysis of Molecular Data
-Version: 0.2.1
+Version: 0.2.2
 Author: Jianwei <jianwei363@gmail.com>
 Maintainer: Jianwei <jianwei363@gmail.com>
 Description: Functions for analyzing molecular data, including reaction matching, 
@@ -11,11 +11,16 @@ Depends: R (>= 3.5.0)
 Imports: 
     data.table,
     dplyr,
+    tidyr,
     utils,
     readr,
     igraph,
     tools,
-    ape
+    ape,
+    DBI,
+    RSQLite,
+    vegan,
+    progress
 Suggests: 
     progress,
     testthat

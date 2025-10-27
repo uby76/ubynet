@@ -9,7 +9,7 @@
 #' @param out_dir Directory to save output files.
 #'
 #' @return Two CSV files saved in `out_dir`: `network_edge.csv` and `reaction_summary.csv`.
-#' @export
+
 match_reactions_by_intensity <- function(file1, file2, reaction_delta_file, out_dir = ".") {
   library(dplyr)
   library(readr)

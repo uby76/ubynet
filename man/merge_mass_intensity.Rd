@@ -12,17 +12,17 @@ merge_mass_intensity(
 )
 }
 \arguments{
-  \item{dir_path}{The directory containing CSV files.}
+\item{dir_path}{The directory containing CSV files.}
 
-  \item{output_mass_intensity}{Path to save the merged Mass-Intensity file.}
+\item{output_mass_intensity}{Path to save the merged Mass-Intensity file.}
 
-  \item{output_mass_elements}{Path to save the Mass-Elements file.}
+\item{output_mass_elements}{Path to save the Mass-Elements file.}
 
-  \item{output_meta_file}{Path to save the auto-generated metadata file (optional).}
+\item{output_meta_file}{Path to save the auto-generated metadata file (optional).}
 }
 \value{
 List containing merged data frames.
 }
 \description{
-Merge Mass and Intensity from Multiple CSV Files.
+Merge Mass and Intensity from Multiple CSV Files
 }

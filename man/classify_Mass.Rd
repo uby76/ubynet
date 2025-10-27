@@ -2,7 +2,7 @@
 % Please edit documentation in R/classification_functions.R
 \name{classify_Mass}
 \alias{classify_Mass}
-\title{Classify Mass into product, resistant, and resistant}
+\title{Classify Mass into product, resistant, and disappearance}
 \usage{
 classify_Mass(before, after, output_file = NULL)
 }
@@ -18,9 +18,10 @@ A data frame with Mass classification.
 }
 \description{
 This function takes two CSV files or data frames representing "before" and "after" datasets,
-then classifies Mass into "product", "resistant", or "resistant".
+then classifies Mass into "product", "resistant", or "disappearance".
 }
 \examples{
+\dontrun{
 # Using data frames
 before_data <- data.frame(Mass = c(180.16, 46.07))
 after_data <- data.frame(Mass = c(46.07, 16.04))
@@ -28,4 +29,6 @@ classify_Mass(before_data, after_data)
 
 # Using CSV files
 classify_Mass("before.csv", "after.csv", "classified_results.csv")
+}
+
 }

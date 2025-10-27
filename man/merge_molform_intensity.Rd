@@ -2,27 +2,30 @@
 % Please edit documentation in R/merge_data.R
 \name{merge_molform_intensity}
 \alias{merge_molform_intensity}
-\title{Merge Molecular Formula and Intensity from Multiple CSV Files}
+\title{Merge Data Based on Molecular Formula with Filtering}
 \usage{
 merge_molform_intensity(
   dir_path,
   output_molform_intensity,
   output_molform_elements,
+  output_filtered_samples_dir,
   output_meta_file = NULL
 )
 }
 \arguments{
-  \item{dir_path}{The directory containing CSV files.}
+\item{dir_path}{The directory containing CSV files.}
 
-  \item{output_molform_intensity}{Path to save the merged MolForm-Intensity file.}
+\item{output_molform_intensity}{Path to save the merged MolForm-Intensity file.}
 
-  \item{output_molform_elements}{Path to save the MolForm-Elements file.}
+\item{output_molform_elements}{Path to save the MolForm-Elements file.}
 
-  \item{output_meta_file}{Path to save the auto-generated metadata file (optional).}
+\item{output_filtered_samples_dir}{Directory to save individual filtered sample files.}
+
+\item{output_meta_file}{Path to save the auto-generated metadata file (optional).}
 }
 \value{
 List containing merged data frames.
 }
 \description{
-Merge molecular formula and intensity data from multiple CSV files.
+Merge Data Based on Molecular Formula with Filtering
 }

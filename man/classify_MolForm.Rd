@@ -21,6 +21,7 @@ This function takes two CSV files or data frames representing "before" and "afte
 then classifies MolForm into "product", "resistant", or "disappearance".
 }
 \examples{
+\dontrun{
 # Using data frames
 before_data <- data.frame(MolForm = c("C6H12O6", "C2H5OH"))
 after_data <- data.frame(MolForm = c("C2H5OH", "CH4"))
@@ -28,4 +29,6 @@ classify_MolForm(before_data, after_data)
 
 # Using CSV files
 classify_MolForm("before.csv", "after.csv", "classified_results.csv")
+}
+
 }

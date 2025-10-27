@@ -2,7 +2,7 @@
 % Please edit documentation in R/build_mass_pmd_network.R
 \name{build_mass_pmd_network}
 \alias{build_mass_pmd_network}
-\title{Build Mass-PMD Transformation Network}
+\title{Build Mass PMD Network}
 \usage{
 build_mass_pmd_network(
   mol_file,
@@ -24,9 +24,7 @@ build_mass_pmd_network(
 Invisible NULL. Results are saved to files in the output directory.
 }
 \description{
-Constructs a network of potential biochemical transformations based on 
-paired mass differences (PMD) between molecules in mass spectrometry data.
-This is the original implementation.
+Creates a network based on paired mass differences between molecules.
 }
 \details{
 This function reads molecular mass data and a transformation database, then identifies

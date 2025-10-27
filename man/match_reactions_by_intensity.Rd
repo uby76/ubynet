@@ -17,6 +17,12 @@ match_reactions_by_intensity(file1, file2, reaction_delta_file, out_dir = ".")
 }
 \value{
 Two CSV files saved in `out_dir`: `network_edge.csv` and `reaction_summary.csv`.
+Match reactions between two molecule datasets based on intensity filtering
+
+This function filters precursor and product molecules based on intensity changes,
+and matches them with a list of possible reaction deltas.
+
+Two CSV files saved in `out_dir`: `network_edge.csv` and `reaction_summary.csv`.
 }
 \description{
 This function filters precursor and product molecules based on intensity changes,

@@ -14,9 +14,13 @@
 #' @param remove_isotopes Whether to remove C13 isotopic peaks (default: TRUE)
 #' @param mol_features Vector of molecular features to use for distance calculation
 #' @param ratio_features Vector of ratio features to use for distance calculation
+#'
 #' @return A list containing the phylogenetic tree, distance matrices, and processed data
+#'
 #' @export
+#'
 #' @examples
+#' \dontrun{
 #' # Using file paths
 #' result <- build_weighted_dendrogram(
 #'   mol_file = "Dataset_Mol.csv",
@@ -24,7 +28,7 @@
 #'   numtrans_file = "Dataset_All-Trans_num.peak.trans.csv",
 #'   sample_name = "MyDataset"
 #' )
-
+#' }
 build_weighted_dendrogram <- function(mol_file, 
                                       peak2peak_file, 
                                       numtrans_file,
