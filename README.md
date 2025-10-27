@@ -134,7 +134,7 @@ match_res2 <- match_reactions_by_mass_difference(
 library(tidyr)
 library(ubynet)
 edges <- build_mass_pmd_network(
-  mol_file = "MS_MolInfor1.csv",
+  mol_file = "inflow.csv",
   trans_file = "Transformation_Database_07-2020.csv",
   error_term = 0.00001,
   output_dir = "MS_MolInfor1"
