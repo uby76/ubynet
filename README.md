@@ -210,6 +210,33 @@ result <- build_weighted_dendrogram(
 
 ---
 
+
+```r
+result <- calculate_car_matrix(
+  csv_file = "data.csv",              # 输入 CSV 文件
+  db_path = "FTICR_CAR_smart.db",     # 数据库路径
+  car_min = 0.45,                      #
+  car_max = 1.0,                       # 
+  track_direction = TRUE,              # 是否追踪方向（+/-）
+  top_n = 50,                          
+  verbose = TRUE                       # 显示详细进度
+)
+```
+
+```r
+# 运行分析
+result <- batch_car_analysis(
+  sample_folder = "path/to/samples",
+  db_output_folder = "path/to/databases",
+  edge_output_folder = "path/to/edges",
+  top50_file = "Top50_formula.csv",
+  car_min = 0.45,
+  car_max = 1.0
+)
+```
+
+---
+
 ## 📖 部分函数说明
 
 ### `merge_mass_intensity()`
