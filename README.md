@@ -213,14 +213,23 @@ result <- build_weighted_dendrogram(
 ### 8. 其他测试函数
 ```r
 result <- calculate_car_matrix(
-  csv_file = "data.csv",              # 输入 CSV 文件
-  db_path = "FTICR_CAR_smart.db",     # 数据库路径
-  car_min = 0.45,                      #
-  car_max = 1.0,                       # 
-  track_direction = TRUE,              # 是否追踪方向（+/-）
-  top_n = 50,                          
-  verbose = TRUE                       # 显示详细进度
+    csv_file = "merged_molform_elements.csv",
+    db_path = "FTICR_CAR_smart.db",
+    car_min = 0.45,
+    car_max = 1.0,
+    track_direction = FALSE,  # 关闭方向追踪，使用绝对值
+    small_molecules = c("C", "O", "CH2", "H2O", "CO", "O2", "CO2", "NH3", "NH"),
+    export_top = TRUE,
+    top_n = 50,
+    top_output_file = "Top50_formula.csv",
+    export_all_summary = TRUE,
+    all_summary_file = "Complete_All_Formulas.csv",
+    verbose = TRUE
 )
+
+# 查看统计信息
+print(result$stats)
+
 ```
 
 ```r
