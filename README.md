@@ -16,6 +16,8 @@
 > Jianwei, L. (2025). *ubynet: An R package for molecular data analysis and transformation network construction*. GitHub repository. [https://github.com/uby76/ubynet](https://github.com/uby76/ubynet)
 
 ---
+<script type='text/javascript' src='https://v.wjx.cn/handler/jqemed.ashx?activity=mH76yJc&width=750&source=iframe'></script>
+---
 
 ## 🔧 安装
 
