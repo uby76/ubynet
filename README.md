@@ -18,8 +18,9 @@
 ---
 <div align="center">
 
-📢 **订阅**  
+📢 **订阅最新更新**  
 👉 [点击这里订阅](https://v.wjx.cn/vm/mH76yJc.aspx)
+最新更新会同步发送到邮箱中
 
 </div>
 
