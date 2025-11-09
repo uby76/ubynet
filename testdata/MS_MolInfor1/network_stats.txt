@@ -1,7 +1,0 @@
-Metric	Value
-Number of Nodes	19
-Number of Edges	30
-Average Degree	3.1578947368421
-Average Path Length	NA
-Diameter	NA
-Density	0.087719298245614

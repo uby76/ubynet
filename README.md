@@ -44,7 +44,7 @@ remotes::install_github("uby76/ubynet")
 ## 🚀 使用示例
 
 ![Figure 1](images/figure1.png)
-[`两个示例数据`](https://github.com/uby76/ubynet/tree/main/testdata)
+[`两个示例数据`](https://github.com/uby76/ubynet/tree/main/testdata) （inflow.csv和outflow.csv）
 ### 所有的函数使用的数据格式均为此模版，注意列名一致即可！
 
 ---
