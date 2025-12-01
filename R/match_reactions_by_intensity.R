@@ -14,7 +14,7 @@
 match_reactions_by_intensity <- function(file1, file2, reaction_delta_file, 
                                         out_dir = ".", use_memory_db = TRUE) {
   
-  # 加载必要的包
+  # Load required packages
   if (!require("dplyr")) install.packages("dplyr")
   if (!require("readr")) install.packages("readr")
   if (!require("RSQLite")) install.packages("RSQLite")
@@ -25,24 +25,24 @@ match_reactions_by_intensity <- function(file1, file2, reaction_delta_file,
   library(RSQLite)
   library(DBI)
   
-  message("📥 Step 1: Reading molecular information files...")
+  message("Step 1: Reading molecular information files...")
   
   mol1 <- tryCatch(read_csv(file1, show_col_types = FALSE), 
-                   error = function(e) stop("❌ Failed to read file1: ", e))
+                   error = function(e) stop("Failed to read file1: ", e))
   mol2 <- tryCatch(read_csv(file2, show_col_types = FALSE), 
-                   error = function(e) stop("❌ Failed to read file2: ", e))
+                   error = function(e) stop("Failed to read file2: ", e))
   
   names(mol1) <- trimws(names(mol1))
   names(mol2) <- trimws(names(mol2))
   
   if (!"MolForm" %in% names(mol1) || !"MolForm" %in% names(mol2)) {
-    stop("❌ Error: 'MolForm' column is missing in input files.")
+    stop("Error: 'MolForm' column is missing in input files.")
   }
   
   mol1 <- mol1 %>% rename(Formula = MolForm)
   mol2 <- mol2 %>% rename(Formula = MolForm)
   
-  message("🧮 Step 2: Merging and filtering molecules by intensity ratio...")
+  message("Step 2: Merging and filtering molecules by intensity ratio...")
   
   commom <- merge(mol1, mol2, by = "Formula", suffixes = c("_1", "_2")) %>%
     rename(abundance_1 = intensity_1, abundance_2 = intensity_2)
@@ -55,7 +55,7 @@ match_reactions_by_intensity <- function(file1, file2, reaction_delta_file,
       pro = ifelse(abundance_2 / abundance_1 > 2, 2, 0)
     )
   
-  message("📊 Step 3: Extracting precursor/product molecules...")
+  message("Step 3: Extracting precursor/product molecules...")
   
   data1 <- data %>% filter(pre == 1) %>%
     select(Formula, C = C_1, H = H_1, O = O_1, N = N_1, S = S_1, 
@@ -72,15 +72,15 @@ match_reactions_by_intensity <- function(file1, file2, reaction_delta_file,
   mol1_filtered <- bind_rows(unique1, data1)
   mol2_filtered <- bind_rows(unique2, data2)
   
-  message("🧪 Step 4: Reading reaction delta definitions...")
+  message("Step 4: Reading reaction delta definitions...")
   
   reaction_delta <- tryCatch(read_csv(reaction_delta_file, show_col_types = FALSE),
-                             error = function(e) stop("❌ Failed to read reaction delta file: ", e))
+                             error = function(e) stop("Failed to read reaction delta file: ", e))
   names(reaction_delta) <- trimws(names(reaction_delta))
   
   element_cols <- c("C", "H", "N", "O", "S", "Cl", "Br", "P", "I")
   
-  # 确保所有元素列都是数值型
+  # Ensure all element columns are numeric
   mol1_filtered[element_cols] <- lapply(mol1_filtered[element_cols], function(x) {
     as.numeric(replace(x, is.na(x), 0))
   })
@@ -91,9 +91,9 @@ match_reactions_by_intensity <- function(file1, file2, reaction_delta_file,
     as.numeric(replace(x, is.na(x), 0))
   })
   
-  message("💾 Step 5: Creating database and loading data...")
+  message("Step 5: Creating database and loading data...")
   
-  # 创建数据库连接（内存或磁盘）
+  # Create database connection (in-memory or disk)
   if (use_memory_db) {
     con <- dbConnect(RSQLite::SQLite(), ":memory:")
     message("   Using in-memory database for maximum speed")
@@ -103,22 +103,22 @@ match_reactions_by_intensity <- function(file1, file2, reaction_delta_file,
     message("   Using disk database: ", db_path)
   }
   
-  # 确保断开连接
+  # Ensure disconnection on exit
   on.exit(dbDisconnect(con), add = TRUE)
   
-  # 将数据写入数据库
+  # Write data to database
   dbWriteTable(con, "mol1", mol1_filtered, overwrite = TRUE)
   dbWriteTable(con, "mol2", mol2_filtered, overwrite = TRUE)
   dbWriteTable(con, "reactions", reaction_delta, overwrite = TRUE)
   
-  # 创建索引以加速查询
-  message("🔧 Step 6: Creating indices for fast lookup...")
-  # 为元素列创建索引以加速JOIN查询
+  # Create indices for fast lookup
+  message("Step 6: Creating indices for fast lookup...")
+  # Create indices on element columns to accelerate JOIN queries
   dbExecute(con, "CREATE INDEX IF NOT EXISTS idx_mol1_formula ON mol1(Formula)")
   dbExecute(con, "CREATE INDEX IF NOT EXISTS idx_mol2_formula ON mol2(Formula)")
   dbExecute(con, "CREATE INDEX IF NOT EXISTS idx_mol2_elements ON mol2(C, H, N, O, S, Cl, Br, P, I)")
   
-  message("🔍 Step 7: Matching reactions between molecules...")
+  message("Step 7: Matching reactions between molecules...")
   
   results_list <- list()
   pb <- txtProgressBar(min = 0, max = nrow(reaction_delta), style = 3)
@@ -126,7 +126,7 @@ match_reactions_by_intensity <- function(file1, file2, reaction_delta_file,
   for (i in 1:nrow(reaction_delta)) {
     reaction_name <- reaction_delta$reaction[i]
     
-    # 构建SQL查询，直接在数据库中计算转换后的元素组成
+    # Build SQL query to calculate transformed element composition directly in database
     query <- sprintf("
       SELECT 
         m1.Formula AS Source,
@@ -156,7 +156,7 @@ match_reactions_by_intensity <- function(file1, file2, reaction_delta_file,
       reaction_delta$I[i]
     )
     
-    # 执行查询
+    # Execute query
     matches <- dbGetQuery(con, query)
     
     if (nrow(matches) > 0) {
@@ -168,16 +168,16 @@ match_reactions_by_intensity <- function(file1, file2, reaction_delta_file,
   
   close(pb)
   
-  # 合并所有结果
+  # Combine all results
   if (length(results_list) > 0) {
     results <- bind_rows(results_list)
   } else {
     results <- data.frame(Source = character(), Target = character(), 
                          Reaction = character(), stringsAsFactors = FALSE)
-    warning("⚠️ No reactions matched. Check your input data and delta definitions.")
+    warning("No reactions matched. Check your input data and delta definitions.")
   }
   
-  message("💾 Step 8: Saving outputs...")
+  message("Step 8: Saving outputs...")
   
   if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
   
@@ -192,15 +192,15 @@ match_reactions_by_intensity <- function(file1, file2, reaction_delta_file,
       arrange(desc(Count))
     write_csv(reaction_summary, out_file2)
     
-    message("✅ Done! Found ", nrow(results), " reaction matches")
+    message("Done! Found ", nrow(results), " reaction matches")
     message("   Results saved to:")
     message("   - ", out_file1)
     message("   - ", out_file2)
   } else {
-    message("⚠️ No matches found, output files created but empty")
+    message("No matches found, output files created but empty")
   }
   
-  message("📚 Reference: 10.1016/j.watres.2020.116484")
+  message("Reference: 10.1016/j.watres.2020.116484")
   
   return(invisible(results))
 }
