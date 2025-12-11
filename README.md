@@ -31,7 +31,7 @@
 install.packages("remotes")
 ```
 
-从 GitHub 安装 ubyNet：
+从 GitHub 安装 ubynet：
 
 ```r
 remotes::install_github("uby76/ubynet")
