@@ -23,24 +23,27 @@
 
 </div>
 
----
+## 安装
 
-## 🔧 安装
-
-确保已安装 [`remotes`](https://cran.r-project.org/package=remotes)：
+请先确保安装 remotes 包：
 
 ```r
 install.packages("remotes")
-````
+```
 
-从 GitHub 安装 `ubynet`：
+从 GitHub 安装 ubyNet：
 
 ```r
 remotes::install_github("uby76/ubynet")
 ```
 
----
+中国大陆用户建议使用 GitCode 下载速度更快：
 
+```r
+remotes::install_git("https://gitcode.com/uby076/ubynet.git")
+```
+
+---
 ## 🚀 使用示例
 
 ![Figure 1](images/figure1.png)
