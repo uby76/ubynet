@@ -109,6 +109,11 @@ classify_Mass_intensity("inflow.csv", "outflow.csv", "classified_results_Mass_in
 ![Figure 4](images/figure4.png)
 
 ### 4. 基于分子式变化的反应匹配（慎重使用存在假阳性）
+主要改动包括：
+1. 对分子数据统一进行元素列标准化处理（C, H, O, N, S, Cl, Br, P, I），缺失元素自动补 0；
+2. 重写 match_reactions_by_intensity 函数，基于严格的元素守恒原则进行反应匹配；
+3. 减少因元素缺失或不一致导致的模糊反应匹配结果。
+4. 反应从“部分约束”变成了“全元素严格约束”，比如-O2，只有其他元素不变仅仅只有O去掉2个才会纳入反应
 
 ```r
 library(tidyr)
