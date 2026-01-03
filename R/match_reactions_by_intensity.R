@@ -1,258 +1,341 @@
-# --- Utility Function: Standardize Element Columns ---
-#' Utility function to ensure required element columns exist in a dataframe.
-#' Fills missing element columns with 0.
+# --- Utility Function: Standardize Columns (Elements + Required) ---
+#' Utility function to ensure required columns exist in a dataframe and
+#' to fill missing element columns with 0.
 #' @param df Input data frame.
-#' @param required_elements Character vector of elements required (e.g., c("C", "H", "O")).
+#' @param required_cols Character vector of columns that should be kept (e.g., c("Formula","intensity","C","H","O")).
+#' @param element_cols_all Character vector of supported element columns.
 #' @keywords internal
-standardize_elements <- function(df, required_elements) {
-  # All potential element columns used in matching
-  element_cols_all <- c("C", "H", "O", "N", "S", "Cl", "Br", "P", "I")
-  
-  # Determine which of the element columns should be present based on required_elements
-  elements_to_check <- base::intersect(element_cols_all, required_elements)
-  
-  # Find elements missing from the input dataframe
-  missing_elements <- base::setdiff(elements_to_check, base::names(df))
-  
-  if (base::length(missing_elements) > 0) {
-    for (el in missing_elements) {
-      df[[el]] <- 0 # Add missing column and fill with 0
+# ============================================================
+# 0. Global settings
+# ============================================================
+element_cols_all <- c("C","H","O","N","S","Cl","Br","P","I")
+
+# ============================================================
+# 1. Utility: Standardize columns
+#    - No element stop
+#    - others 0
+# ============================================================
+standardize_elements <- function(df, required_cols) {
+
+  names(df) <- base::trimws(names(df))
+  required_cols <- base::unique(required_cols)
+
+  missing <- base::setdiff(required_cols, names(df))
+  if (length(missing) > 0) {
+
+    missing_elements <- base::intersect(missing, element_cols_all)
+    missing_non_elements <- base::setdiff(missing, element_cols_all)
+
+    if (length(missing_non_elements) > 0) {
+      base::stop(
+        "Error: Missing required non-element columns: ",
+        base::paste(missing_non_elements, collapse = ", ")
+      )
     }
-    base::message(base::paste0("    [Info] Added missing element columns: ", base::paste(missing_elements, collapse = ", ")))
+
+    if (length(missing_elements) > 0) {
+      for (el in missing_elements) df[[el]] <- 0L
+      base::message(
+        "    [Info] Added missing element columns: ",
+        base::paste(missing_elements, collapse = ", ")
+      )
+    }
   }
-  
-  # Select only the necessary columns (Formula, intensity, and required elements)
-  cols_to_select <- base::unique(c("Formula", "intensity", required_elements))
-  cols_to_select <- cols_to_select[cols_to_select %in% base::names(df)]
-  
-  df <- df %>% dplyr::select(dplyr::all_of(cols_to_select))
-  
-  return(df)
+
+  df <- dplyr::select(df, dplyr::all_of(required_cols))
+  df
 }
 
-# --- Reaction Matching Functions ---
+# ============================================================
+# 2. Utility: Parse MolForm
+# ============================================================
+parse_formula_elements <- function(molforms, element_cols) {
 
-#' @title Match reactions between two molecule datasets using database optimization
-#'
-#' @description This function filters precursor and product molecules based on intensity changes,
-#' and matches them with a list of possible reaction deltas (elemental change) using SQLite for speed.
-#'
-#' @param file1 Path to the first molecular information CSV (e.g., inflow). Must contain 'MolForm', 'intensity', and elemental counts (C, H, O, N, S, etc.).
-#' @param file2 Path to the second molecular information CSV (e.g., outflow). Must contain 'MolForm', 'intensity', and elemental counts (C, H, O, N, S, etc.).
-#' @param reaction_delta_file Path to the reaction delta CSV file. Must contain 'reaction' and elemental delta columns (C, H, O, N, S, etc.).
-#' @param out_dir Directory to save output files (default: ".").
-#' @param use_memory_db Logical, whether to use in-memory database (default TRUE).
-#'
-#' @return Two CSV files saved in \code{out_dir}: \code{network_edge.csv} and \code{reaction_summary.csv}.
-#' @export
-#' @importFrom readr read_csv write_csv
-#' @importFrom dplyr select mutate rename filter bind_rows count arrange all_of
-#' @importFrom RSQLite SQLite
-#' @importFrom DBI dbConnect dbDisconnect dbWriteTable dbExecute dbGetQuery
-match_reactions_by_intensity <- function(file1, file2, reaction_delta_file, 
+  molforms <- base::gsub("\\s+", "", base::as.character(molforms))
+  counts <- base::matrix(0L, nrow = length(molforms), ncol = length(element_cols))
+  base::colnames(counts) <- element_cols
+  unknown <- character()
+
+  for (i in seq_along(molforms)) {
+    f <- molforms[i]
+    if (base::is.na(f) || f == "") next
+
+    tokens <- base::regmatches(
+      f,
+      base::gregexpr("[A-Z][a-z]?[0-9]*", f, perl = TRUE)
+    )[[1]]
+
+    if (length(tokens) == 0) next
+
+    for (tk in tokens) {
+      el <- base::sub("([A-Z][a-z]?)[0-9]*", "\\1", tk, perl = TRUE)
+      n  <- base::sub("^[A-Za-z]+", "", tk, perl = TRUE)
+      n  <- if (n == "") 1L else base::suppressWarnings(base::as.integer(n))
+
+      if (base::is.na(n)) next
+
+      if (el %in% element_cols) {
+        counts[i, el] <- counts[i, el] + n
+      } else {
+        unknown <- c(unknown, el)
+      }
+    }
+  }
+
+  list(
+    counts = base::as.data.frame(counts),
+    unknown_elements = base::unique(unknown)
+  )
+}
+
+# ============================================================
+# 3. Utility: Ensure elements from MolForm + mismatch export
+# ============================================================
+ensure_elements_from_molform <- function(df) {
+
+  if (!"MolForm" %in% names(df)) {
+    base::stop("Error: 'MolForm' column is required.")
+  }
+
+  molforms <- base::trimws(base::as.character(df$MolForm))
+  if (base::any(base::is.na(molforms) | molforms == "")) {
+    base::stop("Error: MolForm column contains missing or empty values.")
+  }
+
+  parsed  <- parse_formula_elements(molforms, element_cols_all)
+  derived <- parsed$counts
+
+  if (length(parsed$unknown_elements) > 0) {
+    base::warning(
+      "Unsupported elements in MolForm ignored: ",
+      base::paste(parsed$unknown_elements, collapse = ", ")
+    )
+  }
+
+  # 确保元素列存在
+  for (el in element_cols_all) {
+    if (!el %in% names(df)) df[[el]] <- 0L
+    df[[el]] <- base::suppressWarnings(base::as.integer(df[[el]]))
+  }
+
+  mismatch_flag <- rep(FALSE, nrow(df))
+  mismatch_detail <- vector("list", nrow(df))
+
+  for (i in seq_len(nrow(df))) {
+    diff_el <- character()
+    for (el in element_cols_all) {
+      if (!is.na(df[[el]][i]) && df[[el]][i] != derived[[el]][i]) {
+        diff_el <- c(diff_el, el)
+      }
+    }
+    if (length(diff_el) > 0) {
+      mismatch_flag[i] <- TRUE
+      mismatch_detail[[i]] <- diff_el
+    }
+  }
+
+  mismatch_rows <- NULL
+  if (any(mismatch_flag)) {
+
+    raw_part <- df[mismatch_flag, c("MolForm", element_cols_all), drop = FALSE]
+    colnames(raw_part) <- c("MolForm", paste0(element_cols_all, "_raw"))
+
+    form_part <- derived[mismatch_flag, , drop = FALSE]
+    colnames(form_part) <- paste0(element_cols_all, "_molform")
+
+    mismatch_rows <- base::cbind(
+      raw_part,
+      form_part,
+      mismatch_elements = sapply(
+        mismatch_detail[mismatch_flag],
+        function(x) base::paste(x, collapse = ";")
+      )
+    )
+
+    base::warning(
+      "Element columns differ from MolForm and were replaced: ",
+      base::paste(base::unique(unlist(mismatch_detail)), collapse = ", ")
+    )
+  }
+
+  # 强制以 MolForm 推导值为准
+  for (el in element_cols_all) df[[el]] <- derived[[el]]
+
+  list(
+    df_clean = df,
+    mismatch_rows = mismatch_rows
+  )
+}
+
+# ============================================================
+# 4. Main function
+# ============================================================
+match_reactions_by_intensity <- function(file1, file2, reaction_delta_file,
                                          out_dir = ".", use_memory_db = TRUE) {
-  
-  message("Step 1: Reading and standardizing molecular information files...")
-  
-  mol1 <- tryCatch(readr::read_csv(file1, show_col_types = FALSE), 
-                   error = function(e) base::stop("Failed to read file1: ", e))
-  mol2 <- tryCatch(readr::read_csv(file2, show_col_types = FALSE), 
-                   error = function(e) base::stop("Failed to read file2: ", e))
-  
-  names(mol1) <- trimws(names(mol1))
-  names(mol2) <- trimws(names(mol2))
-  
+
+  if (!base::dir.exists(out_dir)) base::dir.create(out_dir, recursive = TRUE)
+
+  # -------------------------
+  # Step 1. Read data
+  # -------------------------
+  base::message("Step 1: Reading data...")
+  mol1 <- readr::read_csv(file1, show_col_types = FALSE)
+  mol2 <- readr::read_csv(file2, show_col_types = FALSE)
+
   if (!"MolForm" %in% names(mol1) || !"MolForm" %in% names(mol2)) {
     base::stop("Error: 'MolForm' column is missing in input files.")
   }
-  
-  mol1 <- mol1 %>% dplyr::rename(Formula = MolForm)
-  mol2 <- mol2 %>% dplyr::rename(Formula = MolForm)
-  
-  # Required element columns
-  element_cols_all <- c("C", "H", "O", "N", "S", "Cl", "Br", "P", "I")
-  final_element_cols <- element_cols_all # Element column names without suffix
-  
-  # Optimization 1: Standardize element columns (fill missing with 0)
-  mol1 <- standardize_elements(mol1, element_cols_all)
-  mol2 <- standardize_elements(mol2, element_cols_all)
-  
-  message("Step 2: Merging and filtering molecules by intensity ratio (FC < 0.5 for precursor, FC > 2.0 for product)...")
-  
-  # Dynamic columns needed for merge
-  mol_cols_for_merge <- c("Formula", "intensity", element_cols_all)
-  
-  commom <- base::merge(mol1 %>% dplyr::select(dplyr::all_of(mol_cols_for_merge)), 
-                        mol2 %>% dplyr::select(dplyr::all_of(mol_cols_for_merge)), 
-                        by = "Formula", 
-                        suffixes = c("_1", "_2")) %>%
-    dplyr::rename(abundance_1 = intensity_1, abundance_2 = intensity_2)
-  
-  element_cols_1 <- paste0(element_cols_all, "_1")
-  element_cols_2 <- paste0(element_cols_all, "_2")
-  
-  data <- commom %>%
-    dplyr::select(Formula, abundance_1, dplyr::all_of(element_cols_1),
-                  abundance_2, dplyr::all_of(element_cols_2)) %>%
-    dplyr::mutate(
-      pre = base::ifelse(abundance_2 / abundance_1 < 0.5, 1, 0),
-      pro = base::ifelse(abundance_2 / abundance_1 > 2, 2, 0)
-    )
-  
-  message("Step 3: Extracting precursor/product molecules...")
-  
-  # Extract precursors (decreasing intensity)
-  data1 <- data %>% dplyr::filter(pre == 1) %>%
-    dplyr::select(Formula, dplyr::all_of(element_cols_1))
-  
-  # Rename columns from _1 suffix to no suffix
-  names(data1) <- c("Formula", final_element_cols)
-  
-  # Extract products (increasing intensity)
-  data2 <- data %>% dplyr::filter(pro == 2) %>%
-    dplyr::select(Formula, dplyr::all_of(element_cols_2))
-  
-  # Rename columns from _2 suffix to no suffix
-  names(data2) <- c("Formula", final_element_cols)
-  
-  # Extract unique molecules
-  unique_cols <- c("Formula", final_element_cols)
-  unique1 <- mol1 %>% dplyr::filter(!(Formula %in% commom$Formula)) %>%
-    dplyr::select(dplyr::all_of(unique_cols))
-  unique2 <- mol2 %>% dplyr::filter(!(Formula %in% commom$Formula)) %>%
-    dplyr::select(dplyr::all_of(unique_cols))
-  
-  mol1_filtered <- dplyr::bind_rows(unique1, data1)
-  mol2_filtered <- dplyr::bind_rows(unique2, data2)
-  
-  message("Step 4: Reading reaction delta definitions...")
-  
-  reaction_delta <- tryCatch(readr::read_csv(reaction_delta_file, show_col_types = FALSE),
-                             error = function(e) base::stop("Failed to read reaction delta file: ", e))
-  names(reaction_delta) <- trimws(names(reaction_delta))
-  
-  # Optimization 2: Standardize element columns in delta file
-  reaction_delta <- standardize_elements(reaction_delta, c("reaction", final_element_cols))
-  
-  # Ensure all element columns are numeric (for safety)
-  reaction_delta[final_element_cols] <- base::lapply(reaction_delta[final_element_cols], function(x) {
-    base::as.numeric(base::replace(x, base::is.na(x), 0))
-  })
-  
-  mol1_filtered[final_element_cols] <- base::lapply(mol1_filtered[final_element_cols], function(x) {
-    base::as.numeric(base::replace(x, base::is.na(x), 0))
-  })
-  mol2_filtered[final_element_cols] <- base::lapply(mol2_filtered[final_element_cols], function(x) {
-    base::as.numeric(base::replace(x, base::is.na(x), 0))
-  })
-  
-  message("Step 5: Creating database and loading data...")
-  
-  if (out_dir == ".") {
-    db_path_base <- "temp_reactions"
-  } else {
-    db_path_base <- base::file.path(out_dir, "temp_reactions")
+  if (!"intensity" %in% names(mol1) || !"intensity" %in% names(mol2)) {
+    base::stop("Error: 'intensity' column is missing in input files.")
   }
 
-  if (use_memory_db) {
-    con <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-    message("    Using in-memory database for maximum speed")
-  } else {
-    db_path <- paste0(db_path_base, ".db")
-    con <- DBI::dbConnect(RSQLite::SQLite(), db_path)
-    message("    Using disk database: ", db_path)
+  mol1 <- standardize_elements(mol1, c("MolForm","intensity",element_cols_all))
+  mol2 <- standardize_elements(mol2, c("MolForm","intensity",element_cols_all))
+
+  mol1$intensity <- base::suppressWarnings(base::as.numeric(mol1$intensity))
+  mol2$intensity <- base::suppressWarnings(base::as.numeric(mol2$intensity))
+
+  if (any(!is.finite(mol1$intensity)) || any(!is.finite(mol2$intensity))) {
+    base::stop("Error: intensity contains NA/Inf values.")
   }
-  
-  base::on.exit(DBI::dbDisconnect(con), add = TRUE)
-  
-  DBI::dbWriteTable(con, "mol1", mol1_filtered, overwrite = TRUE)
-  DBI::dbWriteTable(con, "mol2", mol2_filtered, overwrite = TRUE)
-  DBI::dbWriteTable(con, "reactions", reaction_delta, overwrite = TRUE)
-  
-  message("Step 6: Creating indices for fast lookup...")
-  DBI::dbExecute(con, "CREATE INDEX IF NOT EXISTS idx_mol1_formula ON mol1(Formula)")
-  DBI::dbExecute(con, "CREATE INDEX IF NOT EXISTS idx_mol2_formula ON mol2(Formula)")
-  DBI::dbExecute(con, "CREATE INDEX IF NOT EXISTS idx_mol2_elements ON mol2(C, H, N, O, S, Cl, Br, P, I)")
-  
-  message("Step 7: Matching reactions between molecules...")
-  
-  results_list <- list()
-  pb <- utils::txtProgressBar(min = 0, max = base::nrow(reaction_delta), style = 3)
-  
-  for (i in 1:base::nrow(reaction_delta)) {
-    reaction_name <- reaction_delta$reaction[i]
-    
-    # Build SQL query (all element columns are guaranteed to exist now)
-    query <- base::sprintf("
-      SELECT 
-        m1.Formula AS Source,
-        m2.Formula AS Target,
-        '%s' AS Reaction
-      FROM mol1 m1
-      INNER JOIN mol2 m2 ON
-        ABS(m2.C - (m1.C + %f)) < 0.0001 AND
-        ABS(m2.H - (m1.H + %f)) < 0.0001 AND
-        ABS(m2.N - (m1.N + %f)) < 0.0001 AND
-        ABS(m2.O - (m1.O + %f)) < 0.0001 AND
-        ABS(m2.S - (m1.S + %f)) < 0.0001 AND
-        ABS(m2.Cl - (m1.Cl + %f)) < 0.0001 AND
-        ABS(m2.Br - (m1.Br + %f)) < 0.0001 AND
-        ABS(m2.P - (m1.P + %f)) < 0.0001 AND
-        ABS(m2.I - (m1.I + %f)) < 0.0001
-    ", 
-      reaction_name,
-      reaction_delta$C[i],
-      reaction_delta$H[i],
-      reaction_delta$N[i],
-      reaction_delta$O[i],
-      reaction_delta$S[i],
-      reaction_delta$Cl[i],
-      reaction_delta$Br[i],
-      reaction_delta$P[i],
-      reaction_delta$I[i]
+
+  res1 <- ensure_elements_from_molform(mol1)
+  res2 <- ensure_elements_from_molform(mol2)
+
+  mol1 <- res1$df_clean
+  mol2 <- res2$df_clean
+
+  if (!is.null(res1$mismatch_rows))
+    readr::write_csv(
+      res1$mismatch_rows,
+      base::file.path(out_dir, "mol1_molform_element_mismatch.csv")
     )
-    
-    matches <- DBI::dbGetQuery(con, query)
-    
-    if (base::nrow(matches) > 0) {
-      results_list[[i]] <- matches
-    }
-    
-    utils::setTxtProgressBar(pb, i)
+
+  if (!is.null(res2$mismatch_rows))
+    readr::write_csv(
+      res2$mismatch_rows,
+      base::file.path(out_dir, "mol2_molform_element_mismatch.csv")
+    )
+
+  # -------------------------
+  # Step 2. Merge & FC filter
+  # -------------------------
+  base::message("Step 2: Filtering by intensity change...")
+
+  common <- base::merge(
+    mol1, mol2,
+    by = "MolForm",
+    suffixes = c("_1","_2")
+  )
+
+  ratio <- base::ifelse(
+    common$intensity_1 > 0,
+    common$intensity_2 / common$intensity_1,
+    NA_real_
+  )
+
+  pre_flag <- is.finite(ratio) & ratio < 0.5
+  pro_flag <- is.finite(ratio) & ratio > 2
+
+  precursors <- common[pre_flag, c("MolForm", paste0(element_cols_all,"_1"))]
+  products   <- common[pro_flag, c("MolForm", paste0(element_cols_all,"_2"))]
+
+  colnames(precursors) <- c("MolForm", element_cols_all)
+  colnames(products)   <- c("MolForm", element_cols_all)
+
+  mol1_unique <- mol1[!(mol1$MolForm %in% common$MolForm),
+                      c("MolForm", element_cols_all)]
+
+  mol2_unique <- mol2[!(mol2$MolForm %in% common$MolForm),
+                      c("MolForm", element_cols_all)]
+
+  mol1f <- base::rbind(mol1_unique, precursors)
+  mol2f <- base::rbind(mol2_unique, products)
+
+  mol1f <- ensure_elements_from_molform(mol1f)$df_clean
+  mol2f <- ensure_elements_from_molform(mol2f)$df_clean
+
+  # -------------------------
+  # Step 3. Reaction delta
+  # -------------------------
+  base::message("Step 3: Reading reaction delta...")
+
+  reaction_delta <- readr::read_csv(reaction_delta_file, show_col_types = FALSE)
+  if (!"reaction" %in% names(reaction_delta)) {
+    base::stop("Error: 'reaction' column missing in reaction delta file.")
   }
-  
-  base::close(pb)
-  
-  if (base::length(results_list) > 0) {
-    results <- dplyr::bind_rows(results_list)
-  } else {
-    results <- base::data.frame(Source = base::character(), Target = base::character(), 
-                                Reaction = base::character(), stringsAsFactors = FALSE)
-    base::warning("No reactions matched. Check your input data and delta definitions.")
+
+  reaction_delta <- standardize_elements(
+    reaction_delta,
+    c("reaction", element_cols_all)
+  )
+
+  for (el in element_cols_all) {
+    reaction_delta[[el]] <- base::replace(
+      base::suppressWarnings(base::as.integer(reaction_delta[[el]])),
+      is.na(reaction_delta[[el]]),
+      0L
+    )
   }
-  
-  message("Step 8: Saving outputs...")
-  
-  if (!base::dir.exists(out_dir)) base::dir.create(out_dir, recursive = TRUE)
-  
-  out_file1 <- base::file.path(out_dir, "network_edge.csv")
-  out_file2 <- base::file.path(out_dir, "reaction_summary.csv")
-  
-  readr::write_csv(results, out_file1)
-  
-  if (base::nrow(results) > 0) {
-    reaction_summary <- results %>% 
-      dplyr::count(Reaction, name = "Count") %>%
-      dplyr::arrange(dplyr::desc(Count))
-    readr::write_csv(reaction_summary, out_file2)
-    
-    message("Done! Found ", base::nrow(results), " reaction matches")
-    message("    Results saved to:")
-    message("    - ", out_file1)
-    message("    - ", out_file2)
-  } else {
-    message("No matches found, output files created but empty")
+
+  # -------------------------
+  # Step 4. SQLite matching
+  # -------------------------
+  base::message("Step 4: Matching reactions...")
+
+  con <- if (use_memory_db)
+    DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+  else
+    DBI::dbConnect(RSQLite::SQLite(), base::file.path(out_dir, "temp.db"))
+
+  base::on.exit(DBI::dbDisconnect(con), add = TRUE)
+
+  DBI::dbWriteTable(con,"mol1",mol1f,overwrite=TRUE)
+  DBI::dbWriteTable(con,"mol2",mol2f,overwrite=TRUE)
+  DBI::dbWriteTable(con,"rxn",reaction_delta,overwrite=TRUE)
+
+  DBI::dbExecute(con,"CREATE INDEX idx_mol1 ON mol1(C,H,O,N,S,Cl,Br,P,I)")
+  DBI::dbExecute(con,"CREATE INDEX idx_mol2 ON mol2(C,H,O,N,S,Cl,Br,P,I)")
+
+  results_list <- list()
+  pb <- utils::txtProgressBar(0,nrow(reaction_delta),style=3)
+
+  for (i in seq_len(nrow(reaction_delta))) {
+
+    d <- reaction_delta[i,]
+
+    q <- base::sprintf(
+      "SELECT m1.MolForm AS Source, m2.MolForm AS Target, '%s' AS Reaction
+       FROM mol1 m1 JOIN mol2 m2 ON
+       m2.C  = m1.C  + %d AND m2.H  = m1.H  + %d AND
+       m2.O  = m1.O  + %d AND m2.N  = m1.N  + %d AND
+       m2.S  = m1.S  + %d AND m2.Cl = m1.Cl + %d AND
+       m2.Br = m1.Br + %d AND m2.P  = m1.P  + %d AND
+       m2.I  = m1.I  + %d",
+      d$reaction,
+      d$C,d$H,d$O,d$N,d$S,d$Cl,d$Br,d$P,d$I
+    )
+
+    res <- DBI::dbGetQuery(con,q)
+    if (nrow(res) > 0) results_list[[length(results_list) + 1]] <- res
+    utils::setTxtProgressBar(pb,i)
   }
-  
-  return(base::invisible(results))
+  close(pb)
+
+  results <- if (length(results_list) > 0)
+    dplyr::bind_rows(results_list)
+  else
+    data.frame(Source=character(),Target=character(),Reaction=character())
+
+  # -------------------------
+  # Step 5. Output
+  # -------------------------
+  readr::write_csv(results, base::file.path(out_dir,"network_edge.csv"))
+  readr::write_csv(
+    dplyr::count(results,Reaction,name="Count"),
+    base::file.path(out_dir,"reaction_summary.csv")
+  )
+
+  base::message("Done.")
+  invisible(results)
 }
