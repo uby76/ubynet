@@ -11,196 +11,201 @@
 #'
 #' @return Two CSV files saved in `out_dir`: `network_edge.csv` and `reaction_summary.csv`.
 #' @export
-match_reactions_by_intensity <- function(file1, file2, reaction_delta_file, 
-                                        out_dir = ".", use_memory_db = TRUE) {
-  
-  # Load required packages
-  if (!require("dplyr")) install.packages("dplyr")
-  if (!require("readr")) install.packages("readr")
-  if (!require("RSQLite")) install.packages("RSQLite")
-  if (!require("DBI")) install.packages("DBI")
-  
-  library(dplyr)
-  library(readr)
-  library(RSQLite)
-  library(DBI)
-  
+# =========================================================
+# Utility: Standardize element columns
+# =========================================================
+standardize_elements <- function(df, element_cols) {
+  for (el in element_cols) {
+    if (!el %in% names(df)) {
+      df[[el]] <- 0
+    }
+  }
+  df[element_cols] <- lapply(df[element_cols], function(x) {
+    as.numeric(replace(x, is.na(x), 0))
+  })
+  return(df)
+}
+
+# =========================================================
+# Main Function
+# =========================================================
+match_reactions_by_intensity <- function(file1,
+                                         file2,
+                                         reaction_delta_file,
+                                         out_dir = ".",
+                                         use_memory_db = TRUE) {
+
+  # ---------------------------
+  # Load packages
+  # ---------------------------
+  suppressPackageStartupMessages({
+    library(readr)
+    library(dplyr)
+    library(DBI)
+    library(RSQLite)
+  })
+
+  element_cols <- c("C","H","O","N","S","Cl","Br","P","I")
+
   message("Step 1: Reading molecular information files...")
-  
-  mol1 <- tryCatch(read_csv(file1, show_col_types = FALSE), 
-                   error = function(e) stop("Failed to read file1: ", e))
-  mol2 <- tryCatch(read_csv(file2, show_col_types = FALSE), 
-                   error = function(e) stop("Failed to read file2: ", e))
-  
+
+  mol1 <- readr::read_csv(file1, show_col_types = FALSE)
+  mol2 <- readr::read_csv(file2, show_col_types = FALSE)
+
   names(mol1) <- trimws(names(mol1))
   names(mol2) <- trimws(names(mol2))
-  
+
   if (!"MolForm" %in% names(mol1) || !"MolForm" %in% names(mol2)) {
-    stop("Error: 'MolForm' column is missing in input files.")
+    stop("MolForm column is required in both input files.")
   }
-  
+
   mol1 <- mol1 %>% rename(Formula = MolForm)
   mol2 <- mol2 %>% rename(Formula = MolForm)
-  
-  message("Step 2: Merging and filtering molecules by intensity ratio...")
-  
-  commom <- merge(mol1, mol2, by = "Formula", suffixes = c("_1", "_2")) %>%
-    rename(abundance_1 = intensity_1, abundance_2 = intensity_2)
-  
-  data <- commom %>%
-    select(Formula, abundance_1, C_1, H_1, O_1, N_1, S_1, Cl_1, Br_1, P_1, I_1,
-           abundance_2, C_2, H_2, O_2, N_2, S_2, Cl_2, Br_2, P_2, I_2) %>%
-    mutate(
-      pre = ifelse(abundance_2 / abundance_1 < 0.5, 1, 0),
-      pro = ifelse(abundance_2 / abundance_1 > 2, 2, 0)
-    )
-  
-  message("Step 3: Extracting precursor/product molecules...")
-  
-  data1 <- data %>% filter(pre == 1) %>%
-    select(Formula, C = C_1, H = H_1, O = O_1, N = N_1, S = S_1, 
-           Cl = Cl_1, Br = Br_1, P = P_1, I = I_1)
-  data2 <- data %>% filter(pro == 2) %>%
-    select(Formula, C = C_2, H = H_2, O = O_2, N = N_2, S = S_2, 
-           Cl = Cl_2, Br = Br_2, P = P_2, I = I_2)
-  
-  unique1 <- mol1 %>% filter(!(Formula %in% commom$Formula)) %>%
-    select(Formula, C, H, O, N, S, Cl, Br, P, I)
-  unique2 <- mol2 %>% filter(!(Formula %in% commom$Formula)) %>%
-    select(Formula, C, H, O, N, S, Cl, Br, P, I)
-  
-  mol1_filtered <- bind_rows(unique1, data1)
-  mol2_filtered <- bind_rows(unique2, data2)
-  
-  message("Step 4: Reading reaction delta definitions...")
-  
-  reaction_delta <- tryCatch(read_csv(reaction_delta_file, show_col_types = FALSE),
-                             error = function(e) stop("Failed to read reaction delta file: ", e))
-  names(reaction_delta) <- trimws(names(reaction_delta))
-  
-  element_cols <- c("C", "H", "N", "O", "S", "Cl", "Br", "P", "I")
-  
-  # Ensure all element columns are numeric
-  mol1_filtered[element_cols] <- lapply(mol1_filtered[element_cols], function(x) {
-    as.numeric(replace(x, is.na(x), 0))
-  })
-  mol2_filtered[element_cols] <- lapply(mol2_filtered[element_cols], function(x) {
-    as.numeric(replace(x, is.na(x), 0))
-  })
-  reaction_delta[element_cols] <- lapply(reaction_delta[element_cols], function(x) {
-    as.numeric(replace(x, is.na(x), 0))
-  })
-  
-  message("Step 5: Creating database and loading data...")
-  
-  # Create database connection (in-memory or disk)
-  if (use_memory_db) {
-    con <- dbConnect(RSQLite::SQLite(), ":memory:")
-    message("   Using in-memory database for maximum speed")
-  } else {
-    db_path <- file.path(out_dir, "temp_reactions.db")
-    con <- dbConnect(RSQLite::SQLite(), db_path)
-    message("   Using disk database: ", db_path)
+
+  # ---------------------------
+  # Standardize molecule tables
+  # ---------------------------
+  mol1 <- standardize_elements(mol1, element_cols)
+  mol2 <- standardize_elements(mol2, element_cols)
+
+  if (!"intensity" %in% names(mol1) || !"intensity" %in% names(mol2)) {
+    stop("intensity column is required in both input files.")
   }
-  
-  # Ensure disconnection on exit
+
+  message("Step 2: Merging molecules and filtering by intensity change...")
+
+  common <- merge(
+    mol1,
+    mol2,
+    by = "Formula",
+    suffixes = c("_1","_2")
+  ) %>%
+    rename(abundance_1 = intensity_1,
+           abundance_2 = intensity_2)
+
+  data <- common %>%
+    mutate(
+      pre = ifelse(abundance_2 / abundance_1 < 0.5, TRUE, FALSE),
+      pro = ifelse(abundance_2 / abundance_1 > 2.0, TRUE, FALSE)
+    )
+
+  message("Step 3: Extracting precursor and product molecules...")
+
+  # Precursors
+  precursors <- data %>%
+    filter(pre) %>%
+    select(Formula, ends_with("_1"))
+  names(precursors) <- c("Formula", element_cols)
+
+  # Products
+  products <- data %>%
+    filter(pro) %>%
+    select(Formula, ends_with("_2"))
+  names(products) <- c("Formula", element_cols)
+
+  # Unique molecules
+  unique1 <- mol1 %>% filter(!Formula %in% common$Formula) %>%
+    select(Formula, all_of(element_cols))
+  unique2 <- mol2 %>% filter(!Formula %in% common$Formula) %>%
+    select(Formula, all_of(element_cols))
+
+  mol1_final <- bind_rows(unique1, precursors)
+  mol2_final <- bind_rows(unique2, products)
+
+  message("Step 4: Reading and standardizing reaction delta file...")
+
+  reaction_delta <- readr::read_csv(reaction_delta_file, show_col_types = FALSE)
+  names(reaction_delta) <- trimws(names(reaction_delta))
+
+  if (!"reaction" %in% names(reaction_delta)) {
+    stop("reaction column is required in reaction delta file.")
+  }
+
+  reaction_delta <- standardize_elements(reaction_delta, element_cols)
+
+  message("Step 5: Creating SQLite database...")
+
+  if (use_memory_db) {
+    con <- dbConnect(SQLite(), ":memory:")
+  } else {
+    if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
+    con <- dbConnect(SQLite(), file.path(out_dir, "temp_reactions.db"))
+  }
   on.exit(dbDisconnect(con), add = TRUE)
-  
-  # Write data to database
-  dbWriteTable(con, "mol1", mol1_filtered, overwrite = TRUE)
-  dbWriteTable(con, "mol2", mol2_filtered, overwrite = TRUE)
+
+  dbWriteTable(con, "mol1", mol1_final, overwrite = TRUE)
+  dbWriteTable(con, "mol2", mol2_final, overwrite = TRUE)
   dbWriteTable(con, "reactions", reaction_delta, overwrite = TRUE)
-  
-  # Create indices for fast lookup
-  message("Step 6: Creating indices for fast lookup...")
-  # Create indices on element columns to accelerate JOIN queries
+
   dbExecute(con, "CREATE INDEX IF NOT EXISTS idx_mol1_formula ON mol1(Formula)")
   dbExecute(con, "CREATE INDEX IF NOT EXISTS idx_mol2_formula ON mol2(Formula)")
-  dbExecute(con, "CREATE INDEX IF NOT EXISTS idx_mol2_elements ON mol2(C, H, N, O, S, Cl, Br, P, I)")
-  
-  message("Step 7: Matching reactions between molecules...")
-  
+  dbExecute(con, "CREATE INDEX IF NOT EXISTS idx_mol2_elements ON mol2(C,H,O,N,S,Cl,Br,P,I)")
+
+  message("Step 6: Matching reactions...")
+
   results_list <- list()
-  pb <- txtProgressBar(min = 0, max = nrow(reaction_delta), style = 3)
-  
-  for (i in 1:nrow(reaction_delta)) {
-    reaction_name <- reaction_delta$reaction[i]
-    
-    # Build SQL query to calculate transformed element composition directly in database
-    query <- sprintf("
-      SELECT 
+  pb <- utils::txtProgressBar(min = 0, max = nrow(reaction_delta), style = 3)
+
+  for (i in seq_len(nrow(reaction_delta))) {
+
+    delta <- reaction_delta[i, ]
+    reaction_name <- delta$reaction
+
+    query <- sprintf(
+      "
+      SELECT
         m1.Formula AS Source,
         m2.Formula AS Target,
         '%s' AS Reaction
       FROM mol1 m1
       INNER JOIN mol2 m2 ON
-        ABS(m2.C - (m1.C + %f)) < 0.0001 AND
-        ABS(m2.H - (m1.H + %f)) < 0.0001 AND
-        ABS(m2.N - (m1.N + %f)) < 0.0001 AND
-        ABS(m2.O - (m1.O + %f)) < 0.0001 AND
-        ABS(m2.S - (m1.S + %f)) < 0.0001 AND
-        ABS(m2.Cl - (m1.Cl + %f)) < 0.0001 AND
-        ABS(m2.Br - (m1.Br + %f)) < 0.0001 AND
-        ABS(m2.P - (m1.P + %f)) < 0.0001 AND
-        ABS(m2.I - (m1.I + %f)) < 0.0001
-    ", 
+        ABS(m2.C  - (m1.C  + %f)) < 1e-4 AND
+        ABS(m2.H  - (m1.H  + %f)) < 1e-4 AND
+        ABS(m2.O  - (m1.O  + %f)) < 1e-4 AND
+        ABS(m2.N  - (m1.N  + %f)) < 1e-4 AND
+        ABS(m2.S  - (m1.S  + %f)) < 1e-4 AND
+        ABS(m2.Cl - (m1.Cl + %f)) < 1e-4 AND
+        ABS(m2.Br - (m1.Br + %f)) < 1e-4 AND
+        ABS(m2.P  - (m1.P  + %f)) < 1e-4 AND
+        ABS(m2.I  - (m1.I  + %f)) < 1e-4
+      ",
       reaction_name,
-      reaction_delta$C[i],
-      reaction_delta$H[i],
-      reaction_delta$N[i],
-      reaction_delta$O[i],
-      reaction_delta$S[i],
-      reaction_delta$Cl[i],
-      reaction_delta$Br[i],
-      reaction_delta$P[i],
-      reaction_delta$I[i]
+      delta$C, delta$H, delta$O, delta$N,
+      delta$S, delta$Cl, delta$Br, delta$P, delta$I
     )
-    
-    # Execute query
-    matches <- dbGetQuery(con, query)
-    
-    if (nrow(matches) > 0) {
-      results_list[[i]] <- matches
+
+    hits <- dbGetQuery(con, query)
+    if (nrow(hits) > 0) {
+      results_list[[length(results_list) + 1]] <- hits
     }
-    
-    setTxtProgressBar(pb, i)
+
+    utils::setTxtProgressBar(pb, i)
   }
-  
   close(pb)
-  
-  # Combine all results
-  if (length(results_list) > 0) {
-    results <- bind_rows(results_list)
+
+  results <- if (length(results_list) > 0) {
+    bind_rows(results_list)
   } else {
-    results <- data.frame(Source = character(), Target = character(), 
-                         Reaction = character(), stringsAsFactors = FALSE)
-    warning("No reactions matched. Check your input data and delta definitions.")
+    data.frame(Source = character(),
+               Target = character(),
+               Reaction = character(),
+               stringsAsFactors = FALSE)
   }
-  
-  message("Step 8: Saving outputs...")
-  
+
+  message("Step 7: Writing output files...")
+
   if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
-  
-  out_file1 <- file.path(out_dir, "network_edge.csv")
-  out_file2 <- file.path(out_dir, "reaction_summary.csv")
-  
-  write_csv(results, out_file1)
-  
+
+  write_csv(results, file.path(out_dir, "network_edge.csv"))
+
   if (nrow(results) > 0) {
-    reaction_summary <- results %>% 
+    summary <- results %>%
       count(Reaction, name = "Count") %>%
       arrange(desc(Count))
-    write_csv(reaction_summary, out_file2)
-    
-    message("Done! Found ", nrow(results), " reaction matches")
-    message("   Results saved to:")
-    message("   - ", out_file1)
-    message("   - ", out_file2)
-  } else {
-    message("No matches found, output files created but empty")
+    write_csv(summary, file.path(out_dir, "reaction_summary.csv"))
   }
-  
-  message("Reference: 10.1016/j.watres.2020.116484")
-  
+
+  message("Done. Total matched reactions: ", nrow(results))
+
   return(invisible(results))
 }
