@@ -1,7 +1,7 @@
 #' Match reactions between two molecule datasets using database optimization
 #'
 #' This function filters precursor and product molecules based on intensity changes,
-#' and matches them with a list of possible reaction deltas using SQLite for speed.
+#' and matches them with a list of possible reaction deltas using SQLite for speed.Refactor reaction matching logic with strict elemental standardization.
 #'
 #' @param file1 Path to the first molecular information CSV (e.g., inflow).
 #' @param file2 Path to the second molecular information CSV (e.g., outflow).
