@@ -208,13 +208,13 @@ match_reactions_by_intensity <- function(file1, file2, reaction_delta_file,
   if (!is.null(res1$mismatch_rows))
     readr::write_csv(
       res1$mismatch_rows,
-      base::file.path(out_dir, "mol1_molform_element_mismatch.csv")
+      base::file.path(out_dir, "before_molform_element_mismatch.csv")
     )
 
   if (!is.null(res2$mismatch_rows))
     readr::write_csv(
       res2$mismatch_rows,
-      base::file.path(out_dir, "mol2_molform_element_mismatch.csv")
+      base::file.path(out_dir, "after_molform_element_mismatch.csv")
     )
 
   # -------------------------
